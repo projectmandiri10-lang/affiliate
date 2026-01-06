@@ -194,129 +194,130 @@ export default function ProductPage({ product }) {
         </article>
       </main>
 
-      body {
-        font - family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-      -webkit-tap-highlight-color: transparent; /* Remove blue highlight on Android tap */
+      <style jsx global>{`
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            -webkit-tap-highlight-color: transparent; /* Remove blue highlight on Android tap */
         }
-      .container {
-        max - width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-      .main-content {
-        padding: 20px;
-      flex: 1;
+        .main-content {
+            padding: 20px;
+            flex: 1;
         }
-      .header {
-        margin - bottom: 20px;
-      border-bottom: 1px solid #f0f0f0;
-      padding-bottom: 15px;
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 15px;
         }
-      .badge {
-        background - color: #e3f2fd;
-      color: #1565c0;
-      display: inline-block;
-      padding: 6px 10px; /* Larger padding for visual balance */
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 12px;
+        .badge {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            display: inline-block;
+            padding: 6px 10px; /* Larger padding for visual balance */
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
         }
-      h1 {
-        font - size: 1.75rem; /* Good size for mobile headers */
-      margin: 0 0 10px 0;
-      line-height: 1.3;
-      color: #111;
+        h1 {
+            font-size: 1.75rem; /* Good size for mobile headers */
+            margin: 0 0 10px 0;
+            line-height: 1.3;
+            color: #111;
         }
-      .subtitle {
-        color: #777;
-      font-size: 0.95rem;
-      margin: 0;
+        .subtitle {
+            color: #777;
+            font-size: 0.95rem;
+            margin: 0;
         }
-      .content-block {
-        margin - bottom: 30px;
+        .content-block {
+            margin-bottom: 30px;
         }
-      h2 {
-        font - size: 1.25rem;
-      margin-bottom: 12px;
-      font-weight: 700;
-      color: #222;
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #222;
         }
-      p, li {
-        font - size: 16px; /* Ensure strictly 16px+ for readable mobile text */
-      color: #444;
+        p, li {
+            font-size: 16px; /* Ensure strictly 16px+ for readable mobile text */
+            color: #444;
         }
-      ul {
-        padding - left: 20px;
+        ul {
+            padding-left: 20px;
         }
-      li {
-        margin - bottom: 8px;
+        li {
+            margin-bottom: 8px;
         }
-      .review {
-        background: #f7f9fa;
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      border: 1px solid #eee;
+        .review {
+            background: #f7f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #eee;
         }
-      .cta-section {
-        background: #fff;
-      padding: 24px 20px;
-      border: 2px solid #f0f0f0;
-      border-radius: 16px;
-      text-align: center;
-      margin: 30px 0;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-      position: sticky;
-      bottom: 20px; /* Floating effect on some views possible, but keep simple for now */
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(5px);
+        .cta-section {
+            background: #fff;
+            padding: 24px 20px;
+            border: 2px solid #f0f0f0;
+            border-radius: 16px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            position: sticky;
+            bottom: 20px; /* Floating effect on some views possible, but keep simple for now */
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
         }
-      .cta-button {
-        background - color: #ff4757;
-      color: white;
-      border: none;
-      padding: 18px 24px; /* Larger touch target */
-      font-size: 1.1rem;
-      font-weight: bold;
-      border-radius: 50px;
-      cursor: pointer;
-      width: 100%;
-      transition: transform 0.1s; /* Faster transition for touch */
-      box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-      -webkit-tap-highlight-color: transparent;
+        .cta-button {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 18px 24px; /* Larger touch target */
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s; /* Faster transition for touch */
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+            -webkit-tap-highlight-color: transparent;
         }
-      .cta-button:active {
-        transform: scale(0.98); /* Native app feel */
-      background-color: #ff2e43;
+        .cta-button:active {
+            transform: scale(0.98); /* Native app feel */
+            background-color: #ff2e43;
         }
-      .countdown-text {
-        padding: 15px; /* Large hit area for the text */
-      margin-top: 10px;
-      display: inline-block;
-      width: 100%;
-      box-sizing: border-box;
-      font-size: 0.9rem;
-      color: #666;
+        .countdown-text {
+            padding: 15px; /* Large hit area for the text */
+            margin-top: 10px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            color: #666;
         }
-      .footer-padding {
-        padding - top: 10px;
-      padding-bottom: 40px;
-      border-top: 1px solid #f0f0f0;
-      color: #999;
-      font-size: 0.85rem;
-      text-align: center;
+        .footer-padding {
+            padding-top: 10px;
+            padding-bottom: 40px;
+            border-top: 1px solid #f0f0f0;
+            color: #999;
+            font-size: 0.85rem;
+            text-align: center;
         }
-      }</style>
+      `}</style>
     </div >
   );
 }
