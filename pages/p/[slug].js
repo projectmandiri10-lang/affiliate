@@ -7,9 +7,11 @@ export default function ProductPage({ product }) {
   const [countdown, setCountdown] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
-  
+
   // Ref to track if we've already redirected to prevent loops
   const hasRedirected = useRef(false);
+  const hasPausedRef = useRef(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   // 1. Initialize random countdown on mount (18-25 seconds)
   useEffect(() => {
@@ -19,14 +21,14 @@ export default function ProductPage({ product }) {
 
   // 2. Countdown timer
   useEffect(() => {
-    if (countdown === null || countdown <= 0) return;
+    if (countdown === null || countdown <= 0 || isPaused) return;
 
     const timer = setInterval(() => {
       setCountdown((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [countdown]);
+  }, [countdown, isPaused]);
 
   // 3. Scroll detection
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function ProductPage({ product }) {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
       const docHeight = document.documentElement.scrollHeight;
-      
+
       const scrollPercentage = (scrollTop + windowHeight) / docHeight;
 
       if (scrollPercentage >= 0.6) {
@@ -65,10 +67,10 @@ export default function ProductPage({ product }) {
     if (hasRedirected.current) return;
     hasRedirected.current = true;
     setRedirecting(true);
-    
+
     // Safety check: ensure we are client-side
     if (typeof window !== 'undefined') {
-        window.location.href = product.affiliate_url;
+      window.location.href = product.affiliate_url;
     }
   };
 
@@ -88,86 +90,109 @@ export default function ProductPage({ product }) {
 
       <main className="main-content">
         <header className="header">
-           <div className="badge">Rekomendasi Terbaik</div>
-           <h1>{product.title}</h1>
-           <p className="subtitle">Ditinjau oleh Tim Editorial • Diupdate hari ini</p>
+          <div className="badge">Rekomendasi Terbaik</div>
+          <h1>{product.title}</h1>
+          <p className="subtitle">Ditinjau oleh Tim Editorial • Diupdate hari ini</p>
         </header>
 
         <article className="product-details">
-            <div className="image-container">
-                <img 
-                    src={product.image} 
-                    alt={product.title} 
-                    style={{ width: '100%', height: 'auto', borderRadius: '8px', marginBottom: '25px', display: 'block' }} 
-                />
-            </div>
+          <div className="image-container">
+            <img
+              src={product.image}
+              alt={product.title}
+              style={{ width: '100%', height: 'auto', borderRadius: '8px', marginBottom: '25px', display: 'block' }}
+            />
+          </div>
 
-            <div className="content-block">
-                <h2>Tentang Produk Ini</h2>
-                <p>{product.description}</p>
-                <p>
-                    Produk ini telah menjadi pilihan favorit banyak pengguna karena kualitas dan fiturnya yang unggul. 
-                    Kami telah menganalisis berbagai aspek dari produk ini untuk memastikan Anda mendapatkan informasi yang akurat sebelum membeli.
-                </p>
-            </div>
+          <div className="content-block">
+            <h2>Tentang Produk Ini</h2>
+            <p>{product.description}</p>
+            <p>
+              Produk ini telah menjadi pilihan favorit banyak pengguna karena kualitas dan fiturnya yang unggul.
+              Kami telah menganalisis berbagai aspek dari produk ini untuk memastikan Anda mendapatkan informasi yang akurat sebelum membeli.
+            </p>
+          </div>
 
-            <div className="content-block">
-                <h2>Kenapa Kami Merekomendasikannya?</h2>
-                <ul>
-                    <li>Kualitas material yang terjamin dan tahan lama.</li>
-                    <li>Desain ergonomis yang nyaman digunakan sehari-hari.</li>
-                    <li>Harga yang kompetitif dengan fitur yang ditawarkan.</li>
-                    <li>Ulasan positif dari ribuan pengguna yang telah mencoba.</li>
-                </ul>
-            </div>
+          <div className="content-block">
+            <h2>Kenapa Kami Merekomendasikannya?</h2>
+            <ul>
+              <li>Kualitas material yang terjamin dan tahan lama.</li>
+              <li>Desain ergonomis yang nyaman digunakan sehari-hari.</li>
+              <li>Harga yang kompetitif dengan fitur yang ditawarkan.</li>
+              <li>Ulasan positif dari ribuan pengguna yang telah mencoba.</li>
+            </ul>
+          </div>
 
-            <div className="content-block">
-                <h2>Spesifikasi Utama</h2>
-                <p>
-                    Berikut adalah beberapa poin penting yang perlu Anda ketahui mengenai spesifikasi teknis produk ini. 
-                    Pastikan sesuai dengan kebutuhan Anda. Desain modern, material pilihan, dan fungsionalitas tinggi 
-                    menjadi nilai jual utama.
-                </p>
-                <p>
-                    Jangan lewatkan kesempatan untuk mendapatkan produk berkualitas ini. Stok mungkin terbatas 
-                    tergantung pada ketersediaan di toko resmi.
-                </p>
-            </div>
+          <div className="content-block">
+            <h2>Spesifikasi Utama</h2>
+            <p>
+              Berikut adalah beberapa poin penting yang perlu Anda ketahui mengenai spesifikasi teknis produk ini.
+              Pastikan sesuai dengan kebutuhan Anda. Desain modern, material pilihan, dan fungsionalitas tinggi
+              menjadi nilai jual utama.
+            </p>
+            <p>
+              Jangan lewatkan kesempatan untuk mendapatkan produk berkualitas ini. Stok mungkin terbatas
+              tergantung pada ketersediaan di toko resmi.
+            </p>
+          </div>
 
-            <div className="content-block">
-                <h2>Ulasan Pengguna</h2>
-                <div className="review">
-                    <strong>Andi S.</strong> ⭐⭐⭐⭐⭐
-                    <p>"Sangat puas dengan pembelian ini. Pengiriman cepat dan barang sesuai deskripsi. Recommended!"</p>
-                </div>
-                <div className="review">
-                    <strong>Siti M.</strong> ⭐⭐⭐⭐⭐
-                    <p>"Kualitasnya melebihi ekspektasi saya. Pasti akan beli lagi untuk kado."</p>
-                </div>
-                <div className="review">
-                    <strong>Budi R.</strong> ⭐⭐⭐⭐
-                    <p>"Barang bagus, packing rapi. Cuma pengiriman agak lama dari kurirnya, tapi produk oke."</p>
-                </div>
+          <div className="content-block">
+            <h2>Ulasan Pengguna</h2>
+            <div className="review">
+              <strong>Andi S.</strong> ⭐⭐⭐⭐⭐
+              <p>"Sangat puas dengan pembelian ini. Pengiriman cepat dan barang sesuai deskripsi. Recommended!"</p>
             </div>
+            <div className="review">
+              <strong>Siti M.</strong> ⭐⭐⭐⭐⭐
+              <p>"Kualitasnya melebihi ekspektasi saya. Pasti akan beli lagi untuk kado."</p>
+            </div>
+            <div className="review">
+              <strong>Budi R.</strong> ⭐⭐⭐⭐
+              <p>"Barang bagus, packing rapi. Cuma pengiriman agak lama dari kurirnya, tapi produk oke."</p>
+            </div>
+          </div>
 
-            <div className="cta-section">
-                <p className="price-notice">Cek harga terbaru dan promo yang berlaku hari ini di official store.</p>
-                
-                <button onClick={handleManualClick} className="cta-button">
-                    {redirecting ? 'Mengalihkan...' : 'Buka di Aplikasi / Website Resmi'}
-                </button>
-                
-                <p className="disclaimer">
-                    *Kami mungkin mendapatkan komisi dari pembelian melalui link di atas. 
-                    Hal ini tidak mempengaruhi harga yang Anda bayar.
-                </p>
-            </div>
-            
-            {/* Extra content to ensure scrollability */}
-            <div className="footer-padding">
-                <p>Informasi Tambahan: Pastikan Anda membaca deskripsi lengkap di halaman penjual untuk detail garansi dan pengembalian.</p>
-                <p>&copy; {new Date().getFullYear()} Review Produk Terpercaya. All rights reserved.</p>
-            </div>
+          <div className="cta-section">
+            <p className="price-notice">Cek harga terbaru dan promo yang berlaku hari ini di official store.</p>
+
+            <button onClick={handleManualClick} className="cta-button">
+              {redirecting ? 'Mengalihkan...' : 'Buka di Aplikasi / Website Resmi'}
+            </button>
+
+            {countdown !== null && countdown > 0 && (
+              <div
+                onClick={() => {
+                  if (!hasPausedRef.current) {
+                    setIsPaused(true);
+                    hasPausedRef.current = true;
+                    setTimeout(() => {
+                      setIsPaused(false);
+                    }, 6000);
+                  }
+                }}
+                style={{
+                  marginTop: '15px',
+                  fontSize: '0.85rem',
+                  color: '#888',
+                  cursor: hasPausedRef.current ? 'default' : 'pointer',
+                  userSelect: 'none'
+                }}
+              >
+                {isPaused ? 'Jeda sebentar...' : `Otomatis alihkan dalam ${countdown} detik`}
+              </div>
+            )}
+
+            <p className="disclaimer">
+              *Kami mungkin mendapatkan komisi dari pembelian melalui link di atas.
+              Hal ini tidak mempengaruhi harga yang Anda bayar.
+            </p>
+          </div>
+
+          {/* Extra content to ensure scrollability */}
+          <div className="footer-padding">
+            <p>Informasi Tambahan: Pastikan Anda membaca deskripsi lengkap di halaman penjual untuk detail garansi dan pengembalian.</p>
+            <p>&copy; {new Date().getFullYear()} Review Produk Terpercaya. All rights reserved.</p>
+          </div>
         </article>
       </main>
 
@@ -325,7 +350,7 @@ export async function getStaticProps({ params }) {
   const filePath = path.join(process.cwd(), 'data', 'products.json');
   const jsonData = await fs.readFile(filePath, 'utf8');
   const products = JSON.parse(jsonData);
-  
+
   const product = products.find((p) => p.slug === params.slug);
 
   return {
