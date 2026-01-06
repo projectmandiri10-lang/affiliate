@@ -11,12 +11,14 @@ export default function ProductPage({ product }) {
   // Ref to track if we've already redirected to prevent loops
   const hasRedirected = useRef(false);
   const hasPausedRef = useRef(false);
+  const initialTimeRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
 
   // 1. Initialize random countdown on mount (18-25 seconds)
   useEffect(() => {
     const randomTime = Math.floor(Math.random() * (25 - 18 + 1) + 18);
     setCountdown(randomTime);
+    initialTimeRef.current = randomTime;
   }, []);
 
   // 2. Countdown timer
@@ -88,7 +90,47 @@ export default function ProductPage({ product }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="main-content">
+      {/* Fixed Top Navbar */}
+      <div className="fixed-navbar">
+        <div className="navbar-content">
+          <div className="timer-wrapper" onClick={() => {
+            if (!hasPausedRef.current) {
+              setIsPaused(true);
+              hasPausedRef.current = true;
+              setTimeout(() => {
+                setIsPaused(false);
+              }, 6000);
+            }
+          }}>
+            {/* Circular SVG Timer */}
+            <div className="circle-timer">
+              <svg width="50" height="50" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#eee" strokeWidth="8" />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="none"
+                  stroke={isPaused ? "#ffc107" : "#ff4757"}
+                  strokeWidth="8"
+                  strokeDasharray="283"
+                  strokeDashoffset={countdown !== null && initialTimeRef.current ? 283 - ((countdown / initialTimeRef.current) * 283) : 0}
+                  transform="rotate(-90 50 50)"
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
+                />
+              </svg>
+              <span className="timer-text">{isPaused ? '||' : countdown}</span>
+            </div>
+          </div>
+
+          <button onClick={handleManualClick} className="navbar-cta">
+            {redirecting ? 'Mengalihkan...' : 'Beli Sekarang'}
+          </button>
+        </div>
+      </div>
+
+      <main className="main-content" style={{ marginTop: '70px' }}>
         <header className="header">
           <div className="badge">Rekomendasi Terbaik</div>
           <h1>{product.title}</h1>
@@ -152,42 +194,11 @@ export default function ProductPage({ product }) {
             </div>
           </div>
 
-          <div className="cta-section">
-            <p className="price-notice">Cek harga terbaru dan promo yang berlaku hari ini di official store.</p>
-
-            <button onClick={handleManualClick} className="cta-button">
-              {redirecting ? 'Mengalihkan...' : 'Buka di Aplikasi / Website Resmi'}
-            </button>
-
-            {countdown !== null && countdown > 0 && (
-              <div
-                onClick={() => {
-                  if (!hasPausedRef.current) {
-                    setIsPaused(true);
-                    hasPausedRef.current = true;
-                    setTimeout(() => {
-                      setIsPaused(false);
-                    }, 6000);
-                  }
-                }}
-                className="countdown-text"
-                style={{
-                  cursor: hasPausedRef.current ? 'default' : 'pointer',
-                  userSelect: 'none'
-                }}
-              >
-                {isPaused ? 'Jeda sebentar...' : `Otomatis alihkan dalam ${countdown} detik`}
-              </div>
-            )}
-
+          <div className="footer-padding">
             <p className="disclaimer">
               *Kami mungkin mendapatkan komisi dari pembelian melalui link di atas.
               Hal ini tidak mempengaruhi harga yang Anda bayar.
             </p>
-          </div>
-
-          {/* Extra content to ensure scrollability */}
-          <div className="footer-padding">
             <p>Informasi Tambahan: Pastikan Anda membaca deskripsi lengkap di halaman penjual untuk detail garansi dan pengembalian.</p>
             <p>&copy; {new Date().getFullYear()} Review Produk Terpercaya. All rights reserved.</p>
           </div>
@@ -211,6 +222,68 @@ export default function ProductPage({ product }) {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        .fixed-navbar {
+            position: fixed;
+            top: 0;
+            left: 0; /* Fallback */
+            right: 0; /* Fallback */
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .navbar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .timer-wrapper {
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .circle-timer {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .timer-text {
+            position: absolute;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #ff4757;
+        }
+        .navbar-cta {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            flex: 1;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .navbar-cta:active {
+            transform: scale(0.96);
         }
         .main-content {
             padding: 20px;
@@ -268,47 +341,6 @@ export default function ProductPage({ product }) {
             margin-bottom: 16px;
             border: 1px solid #eee;
         }
-        .cta-section {
-            background: #fff;
-            padding: 24px 20px;
-            border: 2px solid #f0f0f0;
-            border-radius: 16px;
-            text-align: center;
-            margin: 30px 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            position: sticky;
-            bottom: 20px; /* Floating effect on some views possible, but keep simple for now */
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(5px);
-        }
-        .cta-button {
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            padding: 18px 24px; /* Larger touch target */
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.1s; /* Faster transition for touch */
-            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-            -webkit-tap-highlight-color: transparent;
-        }
-        .cta-button:active {
-            transform: scale(0.98); /* Native app feel */
-            background-color: #ff2e43;
-        }
-        .countdown-text {
-            padding: 15px; /* Large hit area for the text */
-            margin-top: 10px;
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 0.9rem;
-            color: #666;
-        }
         .footer-padding {
             padding-top: 10px;
             padding-bottom: 40px;
@@ -316,6 +348,12 @@ export default function ProductPage({ product }) {
             color: #999;
             font-size: 0.85rem;
             text-align: center;
+        }
+        .disclaimer {
+            font-size: 0.75rem;
+            color: #999;
+            margin-bottom: 15px;
+            font-style: italic;
         }
       `}</style>
     </div >
