@@ -93,39 +93,49 @@ export default function ProductPage({ product }) {
       {/* Fixed Top Navbar */}
       <div className="fixed-navbar">
         <div className="navbar-content">
-          <div className="timer-wrapper" onClick={() => {
-            if (!hasPausedRef.current) {
-              setIsPaused(true);
-              hasPausedRef.current = true;
-              setTimeout(() => {
-                setIsPaused(false);
-              }, 6000);
-            }
-          }}>
-            {/* Circular SVG Timer */}
-            <div className="circle-timer">
-              <svg width="50" height="50" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#eee" strokeWidth="8" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke={isPaused ? "#ffc107" : "#ff4757"}
-                  strokeWidth="8"
-                  strokeDasharray="283"
-                  strokeDashoffset={countdown !== null && initialTimeRef.current ? 283 - ((countdown / initialTimeRef.current) * 283) : 0}
-                  transform="rotate(-90 50 50)"
-                  strokeLinecap="round"
-                  style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
-                />
-              </svg>
-              <span className="timer-text">{isPaused ? '||' : countdown}</span>
+          <div className="left-section">
+            <div className="timer-wrapper">
+              <div className="circle-timer">
+                <svg width="45" height="45" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="#eee" strokeWidth="8" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke={isPaused ? "#ffc107" : "#ff4757"}
+                    strokeWidth="8"
+                    strokeDasharray="283"
+                    strokeDashoffset={countdown !== null && initialTimeRef.current ? 283 - ((countdown / initialTimeRef.current) * 283) : 0}
+                    transform="rotate(-90 50 50)"
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
+                  />
+                </svg>
+                <span className="timer-text" style={{ fontSize: '1rem' }}>{countdown}</span>
+              </div>
             </div>
+
+            {!hasPausedRef.current && countdown > 0 && (
+              <button
+                onClick={() => {
+                  setIsPaused(true);
+                  hasPausedRef.current = true;
+                  setTimeout(() => {
+                    setIsPaused(false);
+                  }, 6000);
+                }}
+                className="pause-btn"
+              >
+                ⏸
+              </button>
+            )}
+
+            {isPaused && <span className="paused-label">Dijeda...</span>}
           </div>
 
           <button onClick={handleManualClick} className="navbar-cta">
-            {redirecting ? 'Mengalihkan...' : 'Beli Sekarang'}
+            {redirecting ? 'Mengalihkan...' : 'Lihat Selengkapnya'}
           </button>
         </div>
       </div>
@@ -246,17 +256,21 @@ export default function ProductPage({ product }) {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 15px;
+            gap: 10px;
+        }
+        .left-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .timer-wrapper {
             position: relative;
-            cursor: pointer;
             flex-shrink: 0;
         }
         .circle-timer {
             position: relative;
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,15 +278,43 @@ export default function ProductPage({ product }) {
         .timer-text {
             position: absolute;
             font-weight: 800;
-            font-size: 1.2rem;
             color: #ff4757;
+        }
+        .pause-btn {
+            background: #f0f0f0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #555;
+            transition: background 0.2s;
+        }
+        .pause-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+        .paused-label {
+            font-size: 0.75rem;
+            color: #ffc107;
+            font-weight: 600;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
         .navbar-cta {
             background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
             color: white;
             border: none;
-            padding: 12px 20px;
-            font-size: 1rem;
+            padding: 12px 16px; /* Slightly reduced padding to fit */
+            font-size: 0.95rem; /* Adjustable font size for mobile */
             font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
@@ -281,6 +323,7 @@ export default function ProductPage({ product }) {
             text-transform: uppercase;
             letter-spacing: 0.5px;
             white-space: nowrap;
+            max-width: 200px; /* Prevent overexpansion */
         }
         .navbar-cta:active {
             transform: scale(0.96);
