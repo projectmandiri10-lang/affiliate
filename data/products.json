@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "tas-kulit-premium",
+    "title": "Tas Kulit Wanita Premium - Elegan & Tahan Lama",
+    "description": "Temukan koleksi tas kulit wanita premium yang dirancang untuk gaya dan ketahanan. Cocok untuk segala suasana, dari kerja hingga santai. Dapatkan penawaran eksklusif hari ini.",
+    "affiliate_url": "https://shopee.co.id/tas-kulit-premium",
+    "image": "/images/tas-kulit.png"
+  },
+  {
+    "slug": "smartwatch-fit-pro",
+    "title": "Smartwatch Fit Pro Series - Pantau Kesehatanmu",
+    "description": "Smartwatch canggih dengan fitur pemantau detak jantung, sleep tracker, dan notifikasi pintar. Baterai tahan lama hingga 7 hari. Cek selengkapnya sekarang.",
+    "affiliate_url": "https://tokopedia.com/smartwatch-fit-pro",
+    "image": "/images/smartwatch.png"
+  },
+  {
+    "slug": "skincare-glowing-set",
+    "title": "Paket Skincare Glowing - Kulit Sehat Bercahaya",
+    "description": "Rangkaian perawatan wajah lengkap untuk hasil kulit glowing alami. Aman untuk semua jenis kulit dan sudah BPOM. Pesan sekarang untuk diskon spesial.",
+    "affiliate_url": "https://tiktok.com/skincare-glowing",
+    "image": "/images/skincare.png"
+  }
+]
