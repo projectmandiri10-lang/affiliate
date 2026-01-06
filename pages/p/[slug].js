@@ -140,7 +140,7 @@ export default function ProductPage({ product }) {
         </div>
       </div>
 
-      <main className="main-content" style={{ marginTop: '70px' }}>
+      <main className="main-content">
         <header className="header">
           <div className="badge">Rekomendasi Terbaik</div>
           <h1>{product.title}</h1>
@@ -235,18 +235,12 @@ export default function ProductPage({ product }) {
             position: relative;
         }
         .fixed-navbar {
-            position: fixed;
+            position: sticky;
             top: 0;
-            left: 0; /* Fallback */
-            right: 0; /* Fallback */
             width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            left: 50%;
-            transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             z-index: 1000;
             padding: 10px 20px;
             box-sizing: border-box;
