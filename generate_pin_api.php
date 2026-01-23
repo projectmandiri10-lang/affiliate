@@ -29,6 +29,7 @@ $shopeeScraper = new ShopeeScraper();
 
 try {
     // 1. AUTO-SCRAPE from Shopee if requested
+    $scrapeError = null;
     if ($autoScrape && !empty($affiliateLink)) {
         try {
             $scrapedData = $shopeeScraper->scrapeProduct($affiliateLink);
@@ -58,16 +59,22 @@ try {
             }
             
         } catch (Exception $e) {
-            // Scraping failed, continue with manual input
-            // Don't throw error, just log it
-            error_log("Shopee scrape failed: " . $e->getMessage());
+            // Scraping failed, save error but continue
+            $scrapeError = $e->getMessage();
+            error_log("Shopee scrape failed: " . $scrapeError);
         }
     }
 
     // Validasi input (after potential scraping)
     if (empty($productName)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Nama produk wajib diisi atau aktifkan Auto-Scrape']);
+        $errorMsg = 'Nama produk wajib diisi';
+        if ($autoScrape && $scrapeError) {
+            $errorMsg .= '. Auto-Scrape gagal: ' . $scrapeError . '. Silakan isi manual.';
+        } elseif ($autoScrape) {
+            $errorMsg .= '. Auto-Scrape tidak menemukan data produk. Silakan isi manual.';
+        }
+        echo json_encode(['error' => $errorMsg]);
         exit;
     }
 
