@@ -3,8 +3,7 @@
 require_once 'PinterestGenerator.php';
 
 // Pastikan Anda memiliki API Key Google Gemini (AI Studio)
-// Dapatkan di: https://aistudio.google.com/app/apikey
-$apiKey = "GANTI_DENGAN_API_KEY_ANDA"; 
+$apiKey = "AIzaSyBvrFoJFzg4Szv-2CA4ZxxXxMFcLPZgjOc"; 
 
 $generator = new PinterestGenerator($apiKey);
 

@@ -22,9 +22,9 @@ if (empty($input['product_name']) || empty($input['description'])) {
     exit;
 }
 
-// Pastikan API KEY tersedia. 
-// Disarankan load dari environment variable untuk keamanan.
-$apiKey = getenv('GEMINI_API_KEY');
+// API Key Configuration
+$apiKey = 'AIzaSyBvrFoJFzg4Szv-2CA4ZxxXxMFcLPZgjOc';
+
 if (!$apiKey) {
     // Fallback atau error jika tidak ada key
     http_response_code(500);
