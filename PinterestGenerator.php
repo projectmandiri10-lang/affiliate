@@ -2,7 +2,7 @@
 
 class PinterestGenerator {
     private string $apiKey;
-    private string $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private string $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent";
 
     public function __construct(string $apiKey) {
         $this->apiKey = $apiKey;
