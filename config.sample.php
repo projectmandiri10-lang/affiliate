@@ -1,13 +1,13 @@
 <?php
 
-// Database Configuration
+// Database Configuration Template
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'affiliate_system'); // Silakan ganti sesuai nama database Anda
-define('DB_USER', 'root');             // Silakan ganti sesuai user database Anda
-define('DB_PASS', '');                 // Silakan ganti sesuai password database Anda
+define('DB_NAME', 'your_database_name');
+define('DB_USER', 'your_username');
+define('DB_PASS', 'your_password');
 
 // Gemini API Key
-define('GEMINI_API_KEY', 'AIzaSyBvrFoJFzg4Szv-2CA4ZxxXxMFcLPZgjOc');
+define('GEMINI_API_KEY', 'your_gemini_api_key_here');
 
 function getDbConnection() {
     try {
@@ -19,7 +19,6 @@ function getDbConnection() {
         ];
         return new PDO($dsn, DB_USER, DB_PASS, $options);
     } catch (\PDOException $e) {
-        // Return null or throw custom error depending on how you want to handle it
         throw new \Exception("Database Connection Error: " . $e->getMessage());
     }
 }
