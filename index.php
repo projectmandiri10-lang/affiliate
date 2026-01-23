@@ -24,8 +24,8 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8">
             <form id="generateForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Nama Produk</label>
-                    <input type="text" id="productName" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Contoh: Gamis Rayon Premium" required>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Nama Produk (Opsional jika Auto-Scrape aktif)</label>
+                    <input type="text" id="productName" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Contoh: Gamis Rayon Premium">
                 </div>
 
                 <div>
@@ -44,18 +44,25 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Deskripsi Produk (Copas dari Marketplace)</label>
-                    <textarea id="description" rows="5" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Paste deskripsi produk di sini..." required></textarea>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Deskripsi Produk (Opsional jika Auto-Scrape aktif)</label>
+                    <textarea id="description" rows="5" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Paste deskripsi produk di sini..."></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Link Affiliate Shopee</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Link Affiliate Shopee (Wajib)</label>
                         <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://shope.ee/..." required>
+                        
+                        <div class="mt-3 flex items-center gap-2">
+                            <input type="checkbox" id="autoScrape" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                            <label for="autoScrape" class="text-sm text-slate-600">
+                                🤖 Auto-Scrape data produk dari Shopee (Nama, Deskripsi, Gambar)
+                            </label>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Upload Gambar Produk</label>
-                        <input type="file" id="productImage" accept="image/*" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white" required>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Upload Gambar Produk (Opsional jika Auto-Scrape aktif)</label>
+                        <input type="file" id="productImage" accept="image/*" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white">
                         <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG. Watermark PROMO akan otomatis ditambahkan.</p>
                     </div>
                 </div>
@@ -186,6 +193,7 @@
             formData.append('category', document.getElementById('category').value);
             formData.append('description', document.getElementById('description').value);
             formData.append('affiliate_link', document.getElementById('affiliateLink').value);
+            formData.append('auto_scrape', document.getElementById('autoScrape').checked ? 'true' : 'false');
             
             const imageFile = document.getElementById('productImage').files[0];
             if (imageFile) {

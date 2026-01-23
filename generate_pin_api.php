@@ -7,6 +7,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 require_once 'config.php';
 require_once 'PinterestGenerator.php';
 require_once 'ImageProcessor.php';
+require_once 'ShopeeScraper.php';
 
 // Handle POST Request Only
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -20,40 +21,73 @@ $productName = $_POST['product_name'] ?? '';
 $description = $_POST['description'] ?? '';
 $category = $_POST['category'] ?? 'General';
 $affiliateLink = $_POST['affiliate_link'] ?? '';
-
-// Validasi input
-if (empty($productName) || empty($description)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Missing product_name or description']);
-    exit;
-}
+$autoScrape = isset($_POST['auto_scrape']) && $_POST['auto_scrape'] === 'true';
 
 $processedImagePath = null;
 $imageProcessor = new ImageProcessor();
+$shopeeScraper = new ShopeeScraper();
 
 try {
-    // 1. Handle Image Upload & Watermark
+    // 1. AUTO-SCRAPE from Shopee if requested
+    if ($autoScrape && !empty($affiliateLink)) {
+        try {
+            $scrapedData = $shopeeScraper->scrapeProduct($affiliateLink);
+            
+            // Override with scraped data if fields are empty
+            if (empty($productName) && !empty($scrapedData['name'])) {
+                $productName = $scrapedData['name'];
+            }
+            
+            if (empty($description) && !empty($scrapedData['description'])) {
+                $description = $scrapedData['description'];
+            }
+            
+            // Auto-download product image if no file uploaded
+            if (!isset($_FILES['product_image']) && !empty($scrapedData['image'])) {
+                $tempImagePath = 'uploads/temp_' . uniqid() . '.jpg';
+                if ($shopeeScraper->downloadImage($scrapedData['image'], $tempImagePath)) {
+                    // Create fake $_FILES entry for ImageProcessor
+                    $_FILES['product_image'] = [
+                        'tmp_name' => $tempImagePath,
+                        'name' => 'shopee_product.jpg',
+                        'type' => 'image/jpeg',
+                        'size' => filesize($tempImagePath),
+                        'error' => UPLOAD_ERR_OK
+                    ];
+                }
+            }
+            
+        } catch (Exception $e) {
+            // Scraping failed, continue with manual input
+            // Don't throw error, just log it
+            error_log("Shopee scrape failed: " . $e->getMessage());
+        }
+    }
+
+    // Validasi input (after potential scraping)
+    if (empty($productName)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Nama produk wajib diisi atau aktifkan Auto-Scrape']);
+        exit;
+    }
+
+    // 2. Handle Image Upload & Watermark
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
         $processedImagePath = $imageProcessor->processImage($_FILES['product_image']);
     }
 
     $pdo = getDbConnection();
 
-    // 2. Generate Content (Gemini)
+    // 3. Generate Content (Gemini)
     if (!GEMINI_API_KEY) {
         throw new Exception("API Key missing in config");
     }
 
-    // Cek Database dulu (Optional: bisa diskip kalau user ingin selalu generate baru karena gambar mungkin beda)
-    // Untuk V3 ini kita FORCE generate baru jika ada gambar baru, atau cek DB jika teks saja.
-    // Tapi untuk simplifikasi dan sesuai request, kita generate terus atau cek sederhana.
-    // Mari kita cek sederhana saja.
-    
+    // Check DB cache
     $stmt = $pdo->prepare("SELECT * FROM generated_pins WHERE product_name = ? LIMIT 1");
     $stmt->execute([$productName]);
     $existingPin = $stmt->fetch();
     
-    // Default result container
     $result = null;
 
     if ($existingPin) {
@@ -66,14 +100,15 @@ try {
             'content_strategy' => $existingPin['strategy']
         ];
     } else {
-        // Generate Newly
+        // Generate new content
+        // If description is still empty, use product name as base
+        $descForAI = !empty($description) ? $description : "Produk: " . $productName;
+        
         $generator = new PinterestGenerator(GEMINI_API_KEY);
-        $result = $generator->generate($productName, $description, $category);
+        $result = $generator->generate($productName, $descForAI, $category);
     }
 
-    // 3. Simpan Transaksi Baru ke Database (Selalu Insert record baru atau Update? Agar history tercatat, Insert baru lebih aman untuk log)
-    // Atau update record lama jika ada? Mari kita buat INSERT baru saja setiap kali request untuk tracking history generate.
-    
+    // 4. Save to Database
     $insertSql = "INSERT INTO generated_pins (product_name, product_description, category, pinterest_title, pinterest_description, keywords, recommended_boards, strategy, affiliate_link, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmtInsert = $pdo->prepare($insertSql);
     $stmtInsert->execute([
@@ -89,13 +124,14 @@ try {
         $processedImagePath
     ]);
     
-    // Kembalikan hasil
+    // Return result
     echo json_encode([
         'success' => true,
         'source' => $existingPin ? 'database_text_cache' : 'new_generation',
         'data' => $result,
-        'image_url' => $processedImagePath, // Frontend tinggal nampilin ini
-        'affiliate_link' => $affiliateLink
+        'image_url' => $processedImagePath,
+        'affiliate_link' => $affiliateLink,
+        'scraped_data' => isset($scrapedData) ? $scrapedData : null
     ]);
 
 } catch (Exception $e) {
