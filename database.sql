@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS generated_pins (
     recommended_boards TEXT, -- Stored as JSON or comma separated
     strategy TEXT,
     affiliate_link TEXT,
+    original_product_url TEXT,
     image_path VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_product_name (product_name)

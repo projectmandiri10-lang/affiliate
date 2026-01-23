@@ -7,7 +7,6 @@ header("Access-Control-Allow-Headers: Content-Type");
 require_once 'config.php';
 require_once 'PinterestGenerator.php';
 require_once 'ImageProcessor.php';
-require_once 'ShopeeScraper.php';
 
 // Handle POST Request Only
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -21,66 +20,21 @@ $productName = $_POST['product_name'] ?? '';
 $description = $_POST['description'] ?? '';
 $category = $_POST['category'] ?? 'General';
 $affiliateLink = $_POST['affiliate_link'] ?? '';
-$autoScrape = isset($_POST['auto_scrape']) && $_POST['auto_scrape'] === 'true';
 
 $processedImagePath = null;
 $imageProcessor = new ImageProcessor();
-$shopeeScraper = new ShopeeScraper();
 
 try {
-    // 1. AUTO-SCRAPE from Shopee if requested
-    $scrapeError = null;
-    if ($autoScrape && !empty($affiliateLink)) {
-        try {
-            $scrapedData = $shopeeScraper->scrapeProduct($affiliateLink);
-            
-            // Override with scraped data if fields are empty
-            if (empty($productName) && !empty($scrapedData['name'])) {
-                $productName = $scrapedData['name'];
-            }
-            
-            if (empty($description) && !empty($scrapedData['description'])) {
-                $description = $scrapedData['description'];
-            }
-            
-            // Auto-download product image if no file uploaded
-            if (!isset($_FILES['product_image']) && !empty($scrapedData['image'])) {
-                $tempImagePath = 'uploads/temp_' . uniqid() . '.jpg';
-                if ($shopeeScraper->downloadImage($scrapedData['image'], $tempImagePath)) {
-                    // Create fake $_FILES entry for ImageProcessor
-                    $_FILES['product_image'] = [
-                        'tmp_name' => $tempImagePath,
-                        'name' => 'shopee_product.jpg',
-                        'type' => 'image/jpeg',
-                        'size' => filesize($tempImagePath),
-                        'error' => UPLOAD_ERR_OK
-                    ];
-                }
-            }
-            
-        } catch (Exception $e) {
-            // Scraping failed, save error but continue
-            $scrapeError = $e->getMessage();
-            error_log("Shopee scrape failed: " . $scrapeError);
-        }
-    }
-
-    // Validasi input (after potential scraping)
-    if (empty($productName)) {
-        http_response_code(400);
-        $errorMsg = 'Nama produk wajib diisi';
-        if ($autoScrape && $scrapeError) {
-            $errorMsg .= '. Auto-Scrape gagal: ' . $scrapeError . '. Silakan isi manual.';
-        } elseif ($autoScrape) {
-            $errorMsg .= '. Auto-Scrape tidak menemukan data produk. Silakan isi manual.';
-        }
-        echo json_encode(['error' => $errorMsg]);
-        exit;
-    }
-
-    // 2. Handle Image Upload & Watermark
+    // 1. Handle Image Upload & Watermark
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
         $processedImagePath = $imageProcessor->processImage($_FILES['product_image']);
+    }
+
+    // Validasi input (Manual Only Now)
+    if (empty($productName) || empty($description)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Nama produk dan deskripsi wajib diisi manual.']);
+        exit;
     }
 
     $pdo = getDbConnection();
@@ -116,7 +70,7 @@ try {
     }
 
     // 4. Save to Database
-    $insertSql = "INSERT INTO generated_pins (product_name, product_description, category, pinterest_title, pinterest_description, keywords, recommended_boards, strategy, affiliate_link, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $insertSql = "INSERT INTO generated_pins (product_name, product_description, category, pinterest_title, pinterest_description, keywords, recommended_boards, strategy, affiliate_link, original_product_url, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmtInsert = $pdo->prepare($insertSql);
     $stmtInsert->execute([
         $productName,
@@ -128,6 +82,7 @@ try {
         json_encode($result['recommended_boards']),
         $result['content_strategy'],
         $affiliateLink,
+        $originalProductUrl,
         $processedImagePath
     ]);
     
