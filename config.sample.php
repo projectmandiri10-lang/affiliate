@@ -7,7 +7,7 @@ define('DB_USER', 'your_username');
 define('DB_PASS', 'your_password');
 
 // Gemini API Key
-define('GEMINI_API_KEY', 'your_gemini_api_key_here');
+define('GEMINI_API_KEY', 'AIzaSyBJsvdyFRFHn-4RM-QJltTDuYvnVgmfzTc');
 
 function getDbConnection() {
     try {
