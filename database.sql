@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS generated_pins (
     keywords TEXT, -- Stored as JSON or comma separated
     recommended_boards TEXT, -- Stored as JSON or comma separated
     strategy TEXT,
+    affiliate_link TEXT,
+    image_path VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_product_name (product_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
