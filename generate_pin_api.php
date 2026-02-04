@@ -20,14 +20,36 @@ $productName = $_POST['product_name'] ?? '';
 $description = $_POST['description'] ?? '';
 $category = $_POST['category'] ?? 'General';
 $affiliateLink = $_POST['affiliate_link'] ?? '';
+$originalProductUrl = $_POST['original_product_url'] ?? null;
 
 $processedImagePath = null;
 $imageProcessor = new ImageProcessor();
 
 try {
+    // Basic server capability checks (helps diagnose 500 on hosting)
+    if (!class_exists('PDO')) {
+        throw new Exception('PDO is not available. Enable PHP PDO extension.');
+    }
+    if (!extension_loaded('pdo_mysql')) {
+        throw new Exception('pdo_mysql extension is not enabled. Enable PHP pdo_mysql.');
+    }
+    if (!function_exists('curl_init')) {
+        throw new Exception('cURL is not available. Enable PHP cURL extension.');
+    }
+    if (!function_exists('imagecreatefromjpeg')) {
+        throw new Exception('GD is not available. Enable PHP GD extension for image processing.');
+    }
+
     // 1. Handle Image Upload & Watermark
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
         $processedImagePath = $imageProcessor->processImage($_FILES['product_image']);
+    } elseif (isset($_FILES['product_image']) && $_FILES['product_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        // Provide clear message if upload is rejected by PHP limits
+        $code = (int) $_FILES['product_image']['error'];
+        if ($code === UPLOAD_ERR_INI_SIZE || $code === UPLOAD_ERR_FORM_SIZE) {
+            throw new Exception('Upload gagal: ukuran file melebihi limit PHP server. Naikkan upload_max_filesize dan post_max_size minimal 10M.');
+        }
+        throw new Exception('Upload gagal. Kode error: ' . $code);
     }
 
     // Validasi input (Manual Only Now)
@@ -65,7 +87,8 @@ try {
         // If description is still empty, use product name as base
         $descForAI = !empty($description) ? $description : "Produk: " . $productName;
         
-        $generator = new PinterestGenerator(GEMINI_API_KEY);
+        $model = (defined('GEMINI_MODEL') && GEMINI_MODEL) ? GEMINI_MODEL : 'gemini-2.5-flash';
+        $generator = new PinterestGenerator(GEMINI_API_KEY, $model);
         $result = $generator->generate($productName, $descForAI, $category);
     }
 
@@ -97,6 +120,8 @@ try {
     ]);
 
 } catch (Exception $e) {
+    // Log full error on server (visible in hosting error logs)
+    error_log('[generate_pin_api.php] ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,

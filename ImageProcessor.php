@@ -2,6 +2,8 @@
 
 class ImageProcessor {
     private $uploadDir = 'uploads/';
+    // Keep untyped for wider PHP compatibility on shared hosting
+    private $maxFileSize = 10485760; // 10 MB
     
     public function __construct() {
         if (!file_exists($this->uploadDir)) {
@@ -16,8 +18,8 @@ class ImageProcessor {
             throw new Exception("Format file tidak didukung. Gunakan JPG, PNG, atau WebP.");
         }
 
-        if ($file['size'] > 5 * 1024 * 1024) { // 5MB limit
-            throw new Exception("Ukuran file terlalu besar (Max 5MB).");
+        if ($file['size'] > $this->maxFileSize) {
+            throw new Exception("Ukuran file terlalu besar (Max 10MB).");
         }
 
         // Generate Filename

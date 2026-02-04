@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
     <title>Pinterest SEO Generator Indonesia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -57,7 +58,7 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Upload Gambar Produk (Wajib)</label>
                         <input type="file" id="productImage" accept="image/*" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white" required>
-                        <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG. Watermark PROMO akan otomatis ditambahkan.</p>
+                        <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG, WebP (maks 10MB). Watermark PROMO akan otomatis ditambahkan.</p>
                     </div>
                 </div>
 
@@ -199,16 +200,25 @@
                     body: formData // Fetch automatically sets Content-Type to multipart/form-data
                 });
 
-                const json = await response.json();
+                // Some hosting errors return HTML (not JSON). Read text first for better debugging.
+                const rawText = await response.text();
+                let json;
+                try {
+                    json = JSON.parse(rawText);
+                } catch (e) {
+                    throw new Error('Server returned non-JSON response (HTTP ' + response.status + '):\n' + rawText);
+                }
 
-                if (json.success) {
+                if (response.ok && json.success) {
                     displayResult(json);
                 } else {
-                    alert('Error: ' + (json.error || 'Terjadi kesalahan sistem'));
+                    alert('Error: ' + (json.error || ('HTTP ' + response.status)));
+                    console.error('API error payload:', json);
                 }
 
             } catch (error) {
                 alert('Gagal menghubungi server: ' + error.message);
+                console.error(error);
             } finally {
                 loading.classList.add('hidden');
                 btn.disabled = false;

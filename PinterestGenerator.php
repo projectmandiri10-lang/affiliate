@@ -1,11 +1,19 @@
 <?php
 
 class PinterestGenerator {
-    private string $apiKey;
-    private string $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent";
+    // Keep untyped for better compatibility on shared hosting PHP versions
+    private $apiKey;
+    private $model;
+    private $apiUrl;
 
-    public function __construct(string $apiKey) {
+    /**
+     * @param string $apiKey Gemini API key
+     * @param string $model  Gemini model name (example: gemini-2.5-flash)
+     */
+    public function __construct($apiKey, $model = 'gemini-2.5-flash') {
         $this->apiKey = $apiKey;
+        $this->model = $model;
+        $this->apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" . $this->model . ":generateContent";
     }
 
     /**
@@ -16,13 +24,13 @@ class PinterestGenerator {
      * @param string $category Kategori produk
      * @return array Hasil generate (Judul, Deskripsi, Keywords, Board)
      */
-    public function generate(string $productName, string $productDesc, string $category): array {
+    public function generate($productName, $productDesc, $category) {
         $prompt = $this->buildPrompt($productName, $productDesc, $category);
         $response = $this->callApi($prompt);
         return $this->parseResponse($response);
     }
 
-    private function buildPrompt(string $name, string $desc, string $category): string {
+    private function buildPrompt($name, $desc, $category) {
         return <<<PROMPT
 Anda adalah spesialis Pinterest SEO Indonesia. Tugas anda adalah membuat konten Pinterest untuk produk berikut agar viral di Indonesia, SEO friendly, dan aman (tidak spam).
 
@@ -68,7 +76,7 @@ ATURAN WAJIB (STRICT):
 PROMPT;
     }
 
-    private function callApi(string $text): string {
+    private function callApi($text) {
         $data = [
             'contents' => [
                 [
@@ -99,7 +107,7 @@ PROMPT;
         return $response;
     }
 
-    private function parseResponse(string $rawResponse): array {
+    private function parseResponse($rawResponse) {
         $json = json_decode($rawResponse, true);
         
         if (!isset($json['candidates'][0]['content']['parts'][0]['text'])) {

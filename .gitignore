@@ -1,5 +1,8 @@
 config.php
 .env
+.vscode/
+.qoder/
 .DS_Store
 node_modules/
 vendor/
+hosting_upload/
