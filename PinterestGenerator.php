@@ -72,8 +72,11 @@ ATURAN WAJIB (STRICT):
 5. UMUM:
    - SEMUA TEKS HARUS BAHASA INDONESIA.
    - TIDAK BOLEH ADA UNSUR SPAM.
-   - FORMAT JSON HARUS VALID.
-PROMPT;
+   - FORMAT JSON HARUS VALID (WAJIB):
+     * Output JSON saja (tanpa penjelasan, tanpa ```).
+     * Jangan gunakan line break / karakter kontrol di dalam string JSON.
+       Jika butuh paragraf baru di deskripsi, gunakan \\n\\n (escape) di dalam string.
+ PROMPT;
     }
 
     private function callApi($text) {
@@ -128,6 +131,10 @@ PROMPT;
     private function parseResponse($rawResponse) {
         $json = json_decode($rawResponse, true);
 
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($json)) {
+            throw new Exception('Invalid Gemini API response (not JSON).');
+        }
+
         // If API returns a structured error, surface a clean message.
         if (isset($json['error']['message'])) {
             $msg = $json['error']['message'];
@@ -144,16 +151,270 @@ PROMPT;
         $textContent = $json['candidates'][0]['content']['parts'][0]['text'];
         
         // Clean markdown code blocks if present
-        $textContent = preg_replace('/^```json\s*|\s*```$/', '', $textContent);
-        
-        $data = json_decode($textContent, true);
+        $textContent = $this->stripCodeFences($textContent);
+
+        // Gemini sometimes returns extra text around JSON. Extract the first JSON value if possible.
+        $jsonCandidate = $this->extractFirstJsonValue($textContent);
+        if ($jsonCandidate === null) {
+            $jsonCandidate = trim($textContent);
+        }
+
+        $data = json_decode($jsonCandidate, true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
-            // Fallback if generic text is returned, simple parsing logic could go here
-            // But for now, let's assume valid JSON due to strict prompt
+            // Common failure: model puts literal newlines inside quoted strings, producing JSON_ERROR_CTRL_CHAR.
+            // Repair the JSON and retry.
+            $repaired = $this->repairJsonCandidate($jsonCandidate);
+            $data = json_decode($repaired, true);
+        }
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Failed to parse JSON content: " . json_last_error_msg() . "\nRaw: " . $textContent);
         }
 
-        return $data;
+        if (!is_array($data)) {
+            throw new Exception('Invalid JSON content (expected an object).');
+        }
+
+        return $this->normalizeGeneratedData($data);
+    }
+
+    private function stripCodeFences($text) {
+        if (!is_string($text)) {
+            return '';
+        }
+
+        // Remove surrounding ```json ... ``` if present
+        $text = preg_replace('/^\s*```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```\s*$/', '', $text);
+        return trim($text);
+    }
+
+    /**
+     * Extract the first complete JSON value (object/array) from a larger text blob.
+     * Returns null if no JSON boundaries are found.
+     */
+    private function extractFirstJsonValue($text) {
+        if (!is_string($text) || $text === '') {
+            return null;
+        }
+
+        $len = strlen($text);
+        $inString = false;
+        $escape = false;
+        $stack = [];
+        $start = null;
+
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $text[$i];
+
+            if ($inString) {
+                if ($escape) {
+                    $escape = false;
+                    continue;
+                }
+                if ($ch === '\\') {
+                    $escape = true;
+                    continue;
+                }
+                if ($ch === '"') {
+                    $inString = false;
+                }
+                continue;
+            }
+
+            if ($ch === '"') {
+                $inString = true;
+                continue;
+            }
+
+            if ($start === null) {
+                if ($ch === '{' || $ch === '[') {
+                    $start = $i;
+                    $stack[] = $ch;
+                }
+                continue;
+            }
+
+            if ($ch === '{' || $ch === '[') {
+                $stack[] = $ch;
+                continue;
+            }
+
+            if ($ch === '}' || $ch === ']') {
+                if (empty($stack)) {
+                    break;
+                }
+
+                $open = $stack[count($stack) - 1];
+                $isMatch = ($open === '{' && $ch === '}') || ($open === '[' && $ch === ']');
+                if ($isMatch) {
+                    array_pop($stack);
+                    if (empty($stack)) {
+                        return trim(substr($text, $start, $i - $start + 1));
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function repairJsonCandidate($jsonText) {
+        if (!is_string($jsonText)) {
+            return '';
+        }
+
+        $jsonText = $this->stripUtf8Bom($jsonText);
+
+        // Normalize "smart quotes" sometimes produced by copy/paste or models.
+        $jsonText = str_replace(
+            ["\xE2\x80\x9C", "\xE2\x80\x9D", "\xE2\x80\x9E", "\xE2\x80\x9F"],
+            '"',
+            $jsonText
+        );
+
+        // Escape control characters inside quoted strings (fixes JSON_ERROR_CTRL_CHAR).
+        $jsonText = $this->escapeControlCharsInJsonStrings($jsonText);
+
+        // Remove trailing commas like {"a":1,} or [1,2,]
+        $jsonText = preg_replace('/,\\s*([}\\]])/', '$1', $jsonText);
+
+        return trim($jsonText);
+    }
+
+    private function stripUtf8Bom($text) {
+        if (!is_string($text) || $text === '') {
+            return $text;
+        }
+
+        // UTF-8 BOM
+        if (substr($text, 0, 3) === "\xEF\xBB\xBF") {
+            return substr($text, 3);
+        }
+
+        return $text;
+    }
+
+    private function escapeControlCharsInJsonStrings($jsonText) {
+        $out = '';
+        $inString = false;
+        $escape = false;
+        $len = strlen($jsonText);
+
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $jsonText[$i];
+            $ord = ord($ch);
+
+            if ($inString) {
+                if ($escape) {
+                    $out .= $ch;
+                    $escape = false;
+                    continue;
+                }
+
+                if ($ch === '\\') {
+                    $out .= $ch;
+                    $escape = true;
+                    continue;
+                }
+
+                if ($ch === '"') {
+                    $out .= $ch;
+                    $inString = false;
+                    continue;
+                }
+
+                if ($ord < 32) {
+                    if ($ch === "\n") {
+                        $out .= '\\\\n';
+                    } elseif ($ch === "\r") {
+                        $out .= '\\\\r';
+                    } elseif ($ch === "\t") {
+                        $out .= '\\\\t';
+                    } else {
+                        $out .= sprintf('\\\\u%04x', $ord);
+                    }
+                    continue;
+                }
+
+                $out .= $ch;
+                continue;
+            }
+
+            if ($ch === '"') {
+                $out .= $ch;
+                $inString = true;
+                continue;
+            }
+
+            // Outside strings, JSON only allows standard whitespace controls.
+            if ($ord < 32) {
+                if ($ch === "\n" || $ch === "\r" || $ch === "\t") {
+                    $out .= $ch;
+                }
+                continue;
+            }
+
+            $out .= $ch;
+        }
+
+        return $out;
+    }
+
+    private function normalizeGeneratedData($data) {
+        if (!is_array($data)) {
+            return [
+                'pinterest_title' => '',
+                'pinterest_description' => '',
+                'keywords' => [],
+                'recommended_boards' => [],
+                'content_strategy' => ''
+            ];
+        }
+
+        $title = isset($data['pinterest_title']) ? (string) $data['pinterest_title'] : '';
+        $desc = isset($data['pinterest_description']) ? (string) $data['pinterest_description'] : '';
+        $strategy = isset($data['content_strategy']) ? (string) $data['content_strategy'] : '';
+
+        $keywords = $this->normalizeStringArray(isset($data['keywords']) ? $data['keywords'] : []);
+        $boards = $this->normalizeStringArray(isset($data['recommended_boards']) ? $data['recommended_boards'] : []);
+
+        return [
+            'pinterest_title' => trim($title),
+            'pinterest_description' => trim($desc),
+            'keywords' => $keywords,
+            'recommended_boards' => $boards,
+            'content_strategy' => trim($strategy)
+        ];
+    }
+
+    private function normalizeStringArray($value) {
+        if (is_string($value)) {
+            $maybeJson = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($maybeJson)) {
+                $value = $maybeJson;
+            } else {
+                $value = preg_split('/\\s*,\\s*/', $value);
+            }
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($value as $item) {
+            if (!is_string($item)) {
+                continue;
+            }
+            $item = trim($item);
+            if ($item === '') {
+                continue;
+            }
+            $out[] = $item;
+        }
+
+        return array_values($out);
     }
 }
