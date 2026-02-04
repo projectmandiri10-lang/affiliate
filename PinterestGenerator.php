@@ -91,27 +91,54 @@ PROMPT;
             ]
         ];
 
-        $ch = curl_init($this->apiUrl . "?key=" . $this->apiKey);
+        $ch = curl_init($this->apiUrl . "?key=" . urlencode($this->apiKey));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         
         $response = curl_exec($ch);
         
-        if (curl_errno($ch)) {
-            throw new Exception("Curl Error: " . curl_error($ch));
+        if ($response === false) {
+            $err = curl_error($ch);
+            curl_close($ch);
+            throw new Exception("Curl Error: " . $err);
+        }
+
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode >= 400) {
+            $json = json_decode($response, true);
+            $msg = isset($json['error']['message']) ? $json['error']['message'] : ('HTTP ' . $httpCode);
+
+            // Make common permission issues friendlier
+            if (stripos($msg, 'reported as leaked') !== false) {
+                $msg = 'Gemini API key is blocked (reported as leaked). Create a new API key and update GEMINI_API_KEY in .env (do not commit it).';
+            }
+
+            throw new Exception('Gemini API error: ' . $msg);
         }
         
-        curl_close($ch);
         return $response;
     }
 
     private function parseResponse($rawResponse) {
         $json = json_decode($rawResponse, true);
+
+        // If API returns a structured error, surface a clean message.
+        if (isset($json['error']['message'])) {
+            $msg = $json['error']['message'];
+            if (stripos($msg, 'reported as leaked') !== false) {
+                $msg = 'Gemini API key is blocked (reported as leaked). Create a new API key and update GEMINI_API_KEY in .env.';
+            }
+            throw new Exception('Gemini API error: ' . $msg);
+        }
         
         if (!isset($json['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new Exception("Invalid API Response or Blocked: " . $rawResponse);
+            throw new Exception('Invalid Gemini API response.');
         }
 
         $textContent = $json['candidates'][0]['content']['parts'][0]['text'];

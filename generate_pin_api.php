@@ -122,9 +122,15 @@ try {
 } catch (Exception $e) {
     // Log full error on server (visible in hosting error logs)
     error_log('[generate_pin_api.php] ' . $e->getMessage());
+
+    $publicMessage = $e->getMessage();
+    if (stripos($publicMessage, 'reported as leaked') !== false) {
+        $publicMessage = 'Gemini API key blocked (reported as leaked). Please create a new key and update GEMINI_API_KEY in .env on the server.';
+    }
+
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
+        'error' => $publicMessage
     ]);
 }
