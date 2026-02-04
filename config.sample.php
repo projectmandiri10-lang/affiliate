@@ -66,6 +66,10 @@ define('GEMINI_API_KEY', env('GEMINI_API_KEY', ''));
 // Optional: configurable model name (Gemini 2.5 Flash)
 define('GEMINI_MODEL', env('GEMINI_MODEL', 'gemini-2.5-flash'));
 
+// Protect manual image compression API (compress_image_api.php)
+// and delete pin API (delete_pin_api.php)
+// Store in .env: COMPRESS_KEY=your-secret-key
+
 function getDbConnection() {
     try {
         $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";

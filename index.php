@@ -19,6 +19,9 @@
         <div class="text-center mb-10">
             <h1 class="text-3xl font-bold text-slate-800 mb-2">Pinterest SEO Generator 🇮🇩</h1>
             <p class="text-slate-500">Buat konten Pinterest viral & SEO friendly dalam hitungan detik.</p>
+            <div class="mt-3 flex justify-center gap-2">
+                <a href="pins.php" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition text-sm font-semibold">Galeri Upload</a>
+            </div>
         </div>
 
         <!-- Form Input -->
@@ -95,6 +98,13 @@
                         ⬇️ Download Gambar
                     </a>
                     
+                    <div id="previewWrap" class="hidden">
+                        <a id="previewBtn" href="#" target="_blank" rel="noopener" class="block w-full text-center bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-medium">
+                            Buka Halaman Preview (Pin URL Ini)
+                        </a>
+                        <p class="text-xs text-slate-500 mt-2">Pinterest biasanya lebih bagus kalau kamu pin URL halaman preview (bukan cuma gambar).</p>
+                    </div>
+
                     <div class="border-t border-slate-100 pt-4">
                         <h4 class="text-sm font-semibold text-slate-600 mb-2">🔗 Affiliate Link</h4>
                         <div class="flex gap-2">
@@ -195,7 +205,11 @@
             }
 
             try {
-                const response = await fetch('generate_pin_api.php', {
+                const qs = new URLSearchParams(window.location.search);
+                const debug = qs.get('debug') === '1';
+                const apiUrl = debug ? 'generate_pin_api.php?debug=1' : 'generate_pin_api.php';
+
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     body: formData // Fetch automatically sets Content-Type to multipart/form-data
                 });
@@ -212,7 +226,8 @@
                 if (response.ok && json.success) {
                     displayResult(json);
                 } else {
-                    alert('Error: ' + (json.error || ('HTTP ' + response.status)));
+                    const extra = json && json.phase ? ('\nPhase: ' + json.phase) : '';
+                    alert('Error: ' + (json.error || ('HTTP ' + response.status)) + extra);
                     console.error('API error payload:', json);
                 }
 
@@ -247,6 +262,17 @@
                 imgElement.parentElement.classList.remove('hidden');
             } else {
                 imgElement.parentElement.classList.add('hidden'); // Hide if no image
+            }
+
+            // Preview Page Link (for pinning)
+            const previewWrap = document.getElementById('previewWrap');
+            const previewBtn = document.getElementById('previewBtn');
+            if (data.preview_url) {
+                previewBtn.href = data.preview_url;
+                previewBtn.textContent = 'Buka Halaman Preview (Pin URL Ini)';
+                previewWrap.classList.remove('hidden');
+            } else {
+                previewWrap.classList.add('hidden');
             }
 
             // Affiliate Link
