@@ -1,0 +1,14 @@
+.env
+config.php
+.vscode/
+.qoder/
+.DS_Store
+node_modules/
+vendor/
+hosting_upload/
+
+# User uploads / generated assets
+uploads/*
+!uploads/.htaccess
+!uploads/index.html
+

@@ -146,37 +146,6 @@ function limitWords($text, $maxWords) {
     return trim(implode(' ', array_slice($words, 0, $maxWords)));
 }
 
-function iniSizeToBytes($value) {
-    $value = trim((string) $value);
-    if ($value === '') {
-        return 0;
-    }
-
-    $last = strtolower(substr($value, -1));
-    $number = (float) $value;
-
-    // PHP shorthand byte values: K, M, G
-    switch ($last) {
-        case 'g':
-            $number *= 1024;
-            // no break
-        case 'm':
-            $number *= 1024;
-            // no break
-        case 'k':
-            $number *= 1024;
-            break;
-    }
-
-    if ($number < 0) {
-        return 0;
-    }
-    if ($number > PHP_INT_MAX) {
-        return PHP_INT_MAX;
-    }
-    return (int) round($number);
-}
-
 // Enable extra debug output when needed:
 // - add ?debug=1 to the request URL, OR
 // - set APP_DEBUG=1 in .env (after config.php loads .env)
@@ -194,42 +163,6 @@ $description = $_POST['description'] ?? '';
 $category = $_POST['category'] ?? 'General';
 $affiliateLink = $_POST['affiliate_link'] ?? '';
 $originalProductUrl = $_POST['original_product_url'] ?? null;
-
-$productName = trim((string) $productName);
-$description = trim((string) $description);
-$category = trim((string) $category);
-$affiliateLink = trim((string) $affiliateLink);
-if ($originalProductUrl !== null) {
-    $originalProductUrl = trim((string) $originalProductUrl);
-    if ($originalProductUrl === '') {
-        $originalProductUrl = null;
-    }
-}
-
-// If PHP drops multipart POST fields (common when post_max_size is exceeded),
-// $_POST and $_FILES become empty, making validation errors very confusing.
-$__phase = 'preflight_post_parse';
-$contentLength = isset($_SERVER['CONTENT_LENGTH']) ? (int) $_SERVER['CONTENT_LENGTH'] : 0;
-if ($contentLength > 0 && empty($_POST) && empty($_FILES)) {
-    $postMax = (string) ini_get('post_max_size');
-    $uploadMax = (string) ini_get('upload_max_filesize');
-    $postMaxBytes = iniSizeToBytes($postMax);
-
-    $status = 400;
-    $message = 'Server tidak menerima data form. Biasanya karena ukuran upload melebihi limit PHP (post_max_size/upload_max_filesize) atau konfigurasi server.';
-    if ($postMaxBytes > 0 && $contentLength > $postMaxBytes) {
-        $status = 413;
-        $message = 'Upload terlalu besar untuk limit server. Kecilkan ukuran gambar atau naikkan post_max_size dan upload_max_filesize di hosting.';
-    }
-
-    $payload = ['success' => false, 'error' => $message, 'phase' => $__phase];
-    if ($__debug) {
-        $payload['content_length'] = $contentLength;
-        $payload['post_max_size'] = $postMax;
-        $payload['upload_max_filesize'] = $uploadMax;
-    }
-    jsonResponse($payload, $status);
-}
 
 $processedImagePath = null;
 
@@ -259,28 +192,31 @@ try {
         // Provide clear message if upload is rejected by PHP limits
         $code = (int) $_FILES['product_image']['error'];
         if ($code === UPLOAD_ERR_INI_SIZE || $code === UPLOAD_ERR_FORM_SIZE) {
-            throw new Exception('Upload gagal: ukuran file melebihi limit PHP server. Naikkan upload_max_filesize dan post_max_size minimal 10M.');
+            throw new Exception('Upload failed: file size exceeds the PHP server limit. Increase upload_max_filesize and post_max_size to at least 10M.');
         }
-        throw new Exception('Upload gagal. Kode error: ' . $code);
+        throw new Exception('Upload failed. Error code: ' . $code);
     }
 
-    $__phase = 'validate_input';
-    // Validasi input
-    if ($productName === '') {
-        jsonResponse(['success' => false, 'error' => 'Nama produk wajib diisi.', 'phase' => $__phase], 400);
+    // Validasi input (Manual Only Now)
+    if (empty($productName) || empty($description)) {
+        jsonResponse(['success' => false, 'error' => 'Product name and description are required.'], 400);
     }
 
-    // Deskripsi boleh kosong (akan pakai nama produk sebagai konteks AI)
-
+    $affiliateLink = trim((string) $affiliateLink);
     if ($affiliateLink === '') {
-        jsonResponse(['success' => false, 'error' => 'Link affiliate wajib diisi.', 'phase' => $__phase], 400);
+        jsonResponse(['success' => false, 'error' => 'ClickBank affiliate (HopLink) URL is required.'], 400);
     }
     if (filter_var($affiliateLink, FILTER_VALIDATE_URL) === false) {
-        jsonResponse(['success' => false, 'error' => 'Link affiliate harus berupa URL valid (sertakan https://).', 'phase' => $__phase], 400);
+        jsonResponse(['success' => false, 'error' => 'Affiliate URL must be a valid URL (include https://).'], 400);
     }
 
-    if ($originalProductUrl !== null && filter_var($originalProductUrl, FILTER_VALIDATE_URL) === false) {
-        jsonResponse(['success' => false, 'error' => 'URL produk asli harus berupa URL valid (sertakan https://).', 'phase' => $__phase], 400);
+    if ($originalProductUrl !== null) {
+        $originalProductUrl = trim((string) $originalProductUrl);
+        if ($originalProductUrl === '') {
+            $originalProductUrl = null;
+        } elseif (filter_var($originalProductUrl, FILTER_VALIDATE_URL) === false) {
+            jsonResponse(['success' => false, 'error' => 'Offer page URL must be a valid URL (include https://).'], 400);
+        }
     }
 
     $__phase = 'db_connect';
@@ -313,7 +249,7 @@ try {
         // Generate new content
         // If description is still empty, use product name as base
         $__phase = 'gemini_generate';
-        $descForAI = !empty($description) ? $description : "Produk: " . $productName;
+        $descForAI = !empty($description) ? $description : "Product: " . $productName;
         
         $model = (defined('GEMINI_MODEL') && GEMINI_MODEL) ? GEMINI_MODEL : 'gemini-2.5-flash';
         $generator = new PinterestGenerator(GEMINI_API_KEY, $model);

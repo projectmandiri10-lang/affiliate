@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
-    <title>Pinterest SEO Generator Indonesia</title>
+    <title>ClickBank Pinterest Pin Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -17,10 +17,10 @@
         
         <!-- Header -->
         <div class="text-center mb-10">
-            <h1 class="text-3xl font-bold text-slate-800 mb-2">Pinterest SEO Generator 🇮🇩</h1>
-            <p class="text-slate-500">Buat konten Pinterest viral & SEO friendly dalam hitungan detik.</p>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">Pinterest Pin Generator (ClickBank)</h1>
+            <p class="text-slate-500">Generate Pinterest-ready SEO copy and a watermarked image in seconds.</p>
             <div class="mt-3 flex justify-center gap-2">
-                <a href="pins.php" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition text-sm font-semibold">Galeri Upload</a>
+                <a href="pins.php" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition text-sm font-semibold">Uploads Gallery</a>
             </div>
         </div>
 
@@ -28,45 +28,45 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8">
             <form id="generateForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Nama Produk</label>
-                    <input type="text" id="productName" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Contoh: Gamis Rayon Premium" required>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Product / Offer Name</label>
+                    <input type="text" id="productName" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Example: At-Home Mobility Routine" required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Kategori</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Category</label>
                     <select id="category" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
-                        <option value="Fashion Muslim">Fashion Muslim</option>
-                        <option value="Fashion Wanita">Fashion Wanita</option>
-                        <option value="Fashion Pria">Fashion Pria</option>
-                        <option value="Kesehatan & Kecantikan">Kesehatan & Kecantikan</option>
-                        <option value="Ibu & Bayi">Ibu & Bayi</option>
-                        <option value="Rumah Tangga">Rumah Tangga</option>
-                        <option value="Elektronik">Elektronik</option>
-                        <option value="Makanan & Minuman">Makanan & Minuman</option>
-                        <option value="Lainnya">Lainnya</option>
+                        <option value="Health & Fitness">Health & Fitness</option>
+                        <option value="Self-Help">Self-Help</option>
+                        <option value="Beauty">Beauty</option>
+                        <option value="Relationships">Relationships</option>
+                        <option value="Business & Marketing">Business & Marketing</option>
+                        <option value="Personal Finance">Personal Finance</option>
+                        <option value="Food & Cooking">Food & Cooking</option>
+                        <option value="Home & Garden">Home & Garden</option>
+                        <option value="Other">Other</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Deskripsi Produk (Opsional)</label>
-                    <textarea id="description" rows="5" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="(Opsional) Paste deskripsi produk di sini..." ></textarea>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Offer Description (paste from sales page)</label>
+                    <textarea id="description" rows="5" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="Paste the offer description here..." required></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Link Affiliate Shopee (Wajib)</label>
-                        <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://shope.ee/..." required>
-                        <p class="text-xs text-slate-500 mt-1">Link affiliate untuk ditampilkan di Pinterest</p>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">ClickBank HopLink (Required)</label>
+                        <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://example.hop.clickbank.net/?tid=..." required>
+                        <p class="text-xs text-slate-500 mt-1">This link is shown on the preview page and used for the redirect.</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Upload Gambar Produk (Wajib)</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Upload Offer Image (Required)</label>
                         <input type="file" id="productImage" accept="image/*" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white" required>
-                        <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG, WebP (maks 10MB). Watermark PROMO akan otomatis ditambahkan.</p>
+                        <p class="text-xs text-slate-500 mt-1">Formats: JPG, PNG, WebP (max 10MB). A “PROMO” watermark is added automatically.</p>
                     </div>
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 rounded-lg transition shadow-md flex justify-center items-center gap-2">
-                    <span>✨ Generate Konten Pinterest & Watermark</span>
+                    <span>Generate Pinterest Copy & Watermark</span>
                 </button>
             </form>
         </div>
@@ -74,7 +74,7 @@
         <!-- Loading State -->
         <div id="loading" class="hidden text-center py-10">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-            <p class="text-slate-600 animate-pulse">Sedang meracik konten SEO & memproses gambar...</p>
+            <p class="text-slate-600 animate-pulse">Generating SEO copy and processing your image...</p>
         </div>
 
         <!-- Result Section -->
@@ -82,31 +82,31 @@
             
             <!-- Source Badge -->
             <div id="sourceBadge" class="hidden bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded w-fit mx-auto">
-                Content Loaded from Database Cache ⚡
+                Content loaded from database cache
             </div>
 
             <!-- Image Result -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 items-center">
                 <div class="w-full md:w-1/2">
-                    <h3 class="font-semibold text-slate-700 mb-3">🖼️ Hasil Gambar (Watermarked)</h3>
+                    <h3 class="font-semibold text-slate-700 mb-3">Watermarked Image</h3>
                     <div class="w-full rounded-lg overflow-hidden border border-slate-200">
                         <img id="resultImage" src="" alt="Generated Pin" class="w-full h-auto object-cover">
                     </div>
                 </div>
                 <div class="w-full md:w-1/2 space-y-4">
                     <a id="downloadBtn" href="#" download class="block w-full text-center bg-slate-800 text-white py-3 rounded-lg hover:bg-slate-900 transition font-medium">
-                        ⬇️ Download Gambar
+                        Download Image
                     </a>
                     
                     <div id="previewWrap" class="hidden">
                         <a id="previewBtn" href="#" target="_blank" rel="noopener" class="block w-full text-center bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-medium">
-                            Buka Halaman Preview (Pin URL Ini)
+                            Open Preview Page (Pin this URL)
                         </a>
-                        <p class="text-xs text-slate-500 mt-2">Pinterest biasanya lebih bagus kalau kamu pin URL halaman preview (bukan cuma gambar).</p>
+                        <p class="text-xs text-slate-500 mt-2">Pinterest often performs better when you pin the preview page URL (not just the image).</p>
                     </div>
 
                     <div class="border-t border-slate-100 pt-4">
-                        <h4 class="text-sm font-semibold text-slate-600 mb-2">🔗 Affiliate Link</h4>
+                        <h4 class="text-sm font-semibold text-slate-600 mb-2">ClickBank HopLink</h4>
                         <div class="flex gap-2">
                             <input type="text" id="resultLink" readonly class="text-sm w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-slate-600">
                             <button onclick="copyTextValue('resultLink')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded text-sm font-medium transition">Copy</button>
@@ -124,19 +124,19 @@
                     </div>
                     <div class="p-6">
                         <p id="resultTitle" class="text-slate-800 text-lg font-medium select-all"></p>
-                        <p class="text-xs text-slate-400 mt-2">Panjang: <span id="titleCount">0</span> karakter</p>
+                        <p class="text-xs text-slate-400 mt-2">Length: <span id="titleCount">0</span> characters</p>
                     </div>
                 </div>
 
                 <!-- Description -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex justify-between items-center">
-                        <h3 class="font-semibold text-slate-700">📝 Deskripsi SEO</h3>
+                        <h3 class="font-semibold text-slate-700">SEO Description</h3>
                         <button onclick="copyText('resultDesc')" class="text-xs text-red-600 hover:text-red-700 font-medium">Copy</button>
                     </div>
                     <div class="p-6">
                         <p id="resultDesc" class="text-slate-600 leading-relaxed whitespace-pre-wrap select-all text-sm"></p>
-                        <p class="text-xs text-slate-400 mt-2">Panjang: <span id="descCount">0</span> karakter</p>
+                        <p class="text-xs text-slate-400 mt-2">Length: <span id="descCount">0</span> characters</p>
                     </div>
                 </div>
             </div>
@@ -154,7 +154,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-slate-50 px-6 py-3 border-b border-slate-200">
-                        <h3 class="font-semibold text-slate-700">📂 Rekomendasi Board</h3>
+                        <h3 class="font-semibold text-slate-700">Recommended Boards</h3>
                     </div>
                     <div class="p-6">
                         <ul id="resultBoards" class="list-disc list-inside text-slate-600 space-y-1"></ul>
@@ -164,7 +164,7 @@
 
             <!-- Strategy -->
             <div class="bg-blue-50 rounded-xl border border-blue-100 p-6">
-                <h3 class="text-blue-800 font-semibold mb-2">💡 Strategi Konten</h3>
+                <h3 class="text-blue-800 font-semibold mb-2">Content Strategy</h3>
                 <p id="resultStrategy" class="text-blue-700 text-sm leading-relaxed"></p>
             </div>
 
@@ -174,7 +174,7 @@
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
-        Copied to clipboard! 📋
+        Copied to clipboard!
     </div>
 
     <script>
@@ -232,7 +232,7 @@
                 }
 
             } catch (error) {
-                alert('Gagal menghubungi server: ' + error.message);
+                alert('Failed to reach the server: ' + error.message);
                 console.error(error);
             } finally {
                 loading.classList.add('hidden');
@@ -269,7 +269,7 @@
             const previewBtn = document.getElementById('previewBtn');
             if (data.preview_url) {
                 previewBtn.href = data.preview_url;
-                previewBtn.textContent = 'Buka Halaman Preview (Pin URL Ini)';
+                previewBtn.textContent = 'Open Preview Page (Pin this URL)';
                 previewWrap.classList.remove('hidden');
             } else {
                 previewWrap.classList.add('hidden');
