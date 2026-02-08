@@ -128,6 +128,10 @@ $previewUrl = $base . 'preview.php?id=' . urlencode((string) $pin['id']);
 
 $imagePath = isset($pin['image_path']) ? (string) $pin['image_path'] : '';
 $imageUrl = $imagePath !== '' ? ($base . ltrim($imagePath, '/')) : '';
+$downloadName = $imagePath !== '' ? basename(str_replace('\\', '/', $imagePath)) : 'image';
+if ($downloadName === '') {
+    $downloadName = 'image';
+}
 
 $keywords = json_decode((string) ($pin['keywords'] ?? ''), true);
 if (!is_array($keywords)) {
@@ -139,7 +143,10 @@ $title = (string) ($pin['pinterest_title'] ?? '');
 $desc = (string) ($pin['pinterest_description'] ?? '');
 $affiliate = (string) ($pin['affiliate_link'] ?? '');
 
-$countdownStart = safeRandomInt(13, 17);
+$redirectEnabled = isset($pin['redirect_enabled']) ? (int) $pin['redirect_enabled'] : 1;
+$redirectEnabled = $redirectEnabled ? 1 : 0;
+
+$countdownStart = $redirectEnabled ? safeRandomInt(13, 17) : safeRandomInt(10, 15);
 
 $desc = limitWords($desc, 15);
 $hashtagsText = implode(' ', $hashtags);
@@ -207,7 +214,7 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
                     <h1 class="text-xl font-semibold text-slate-800 leading-snug"><?= h($title) ?></h1>
                 </div>
                 <div class="text-right space-y-2">
-                    <p class="text-xs text-slate-500">Redirect dalam</p>
+                    <p class="text-xs text-slate-500"><?= $redirectEnabled ? 'Redirect dalam' : 'Download dalam' ?></p>
                     <p class="text-2xl font-bold text-red-600"><span id="countdown"><?= (int) $countdownStart ?></span>s</p>
                     <div class="flex flex-col items-end gap-2">
                         <a data-pin-do="buttonPin" href="<?= h($pinterestCreateUrl) ?>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
@@ -230,17 +237,31 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
             </section>
         <?php endif; ?>
 
-        <section class="bg-white rounded-xl border border-slate-200 p-5">
-            <h2 class="text-sm font-semibold text-slate-700 mb-3">Link Affiliate</h2>
-            <?php if ($affiliate !== ''): ?>
-                <a id="affiliateBtn" href="<?= h($affiliate) ?>" rel="nofollow sponsored" class="inline-flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition opacity-60 pointer-events-none">
-                    Tunggu hitungan selesai...
-                </a>
-                <p class="text-xs text-slate-500 mt-2">Akan otomatis mengarah setelah countdown selesai.</p>
-            <?php else: ?>
-                <p class="text-sm text-slate-600">Link affiliate belum tersedia.</p>
-            <?php endif; ?>
-        </section>
+        <?php if ($redirectEnabled): ?>
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <h2 class="text-sm font-semibold text-slate-700 mb-3">Link Affiliate</h2>
+                <?php if ($affiliate !== ''): ?>
+                    <a id="affiliateBtn" href="<?= h($affiliate) ?>" rel="nofollow sponsored" class="inline-flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition opacity-60 pointer-events-none">
+                        Tunggu hitungan selesai...
+                    </a>
+                    <p class="text-xs text-slate-500 mt-2">Akan otomatis mengarah setelah countdown selesai.</p>
+                <?php else: ?>
+                    <p class="text-sm text-slate-600">Link affiliate belum tersedia.</p>
+                <?php endif; ?>
+            </section>
+        <?php else: ?>
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <h2 class="text-sm font-semibold text-slate-700 mb-3">Download Gambar</h2>
+                <?php if ($imageUrl !== ''): ?>
+                    <a id="downloadBtn" href="<?= h($imageUrl) ?>" download="<?= h($downloadName) ?>" class="inline-flex items-center justify-center w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg transition opacity-60 pointer-events-none">
+                        Tunggu hitungan selesai...
+                    </a>
+                    <p class="text-xs text-slate-500 mt-2">Tombol download akan aktif setelah countdown selesai.</p>
+                <?php else: ?>
+                    <p class="text-sm text-slate-600">Gambar tidak tersedia untuk didownload.</p>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
 
         <!-- Banner script -->
         <section class="bg-white rounded-xl border border-slate-200 p-5">
@@ -285,7 +306,9 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
     (function () {
         var remaining = <?= (int) $countdownStart ?>;
         var el = document.getElementById('countdown');
+        var redirectEnabled = <?= (int) $redirectEnabled ?>;
         var btn = document.getElementById('affiliateBtn');
+        var dlBtn = document.getElementById('downloadBtn');
         var copyBtn = document.getElementById('copyCaptionBtn');
         var captionEl = document.getElementById('captionText');
         if (!el) return;
@@ -340,12 +363,19 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
             el.textContent = String(remaining);
 
             if (remaining <= 0) {
-                if (btn) {
-                    btn.textContent = 'Buka Link Affiliate';
-                    btn.classList.remove('opacity-60', 'pointer-events-none');
-                }
-                if (btn && btn.href) {
-                    window.location.href = btn.href;
+                if (redirectEnabled === 1) {
+                    if (btn) {
+                        btn.textContent = 'Buka Link Affiliate';
+                        btn.classList.remove('opacity-60', 'pointer-events-none');
+                    }
+                    if (btn && btn.href) {
+                        window.location.href = btn.href;
+                    }
+                } else {
+                    if (dlBtn) {
+                        dlBtn.textContent = '⬇️ Download Gambar';
+                        dlBtn.classList.remove('opacity-60', 'pointer-events-none');
+                    }
                 }
                 return;
             }

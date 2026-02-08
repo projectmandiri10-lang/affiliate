@@ -54,9 +54,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Link Affiliate Shopee (Wajib)</label>
-                        <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://shope.ee/..." required>
-                        <p class="text-xs text-slate-500 mt-1">Link affiliate untuk ditampilkan di Pinterest</p>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Link Affiliate Shopee (Opsional)</label>
+                        <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://shope.ee/...">
+                        <p class="text-xs text-slate-500 mt-1">Kalau diisi, link affiliate akan dipakai untuk redirect pada halaman preview (jika Redirect ON). Kalau kosong, halaman preview tidak akan redirect.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Upload Gambar Produk (Wajib)</label>

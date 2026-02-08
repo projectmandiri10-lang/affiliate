@@ -203,10 +203,8 @@ try {
     }
 
     $affiliateLink = trim((string) $affiliateLink);
-    if ($affiliateLink === '') {
-        jsonResponse(['success' => false, 'error' => 'ClickBank affiliate (HopLink) URL is required.'], 400);
-    }
-    if (filter_var($affiliateLink, FILTER_VALIDATE_URL) === false) {
+    // Affiliate link is optional. If provided, it must be a valid URL.
+    if ($affiliateLink !== '' && filter_var($affiliateLink, FILTER_VALIDATE_URL) === false) {
         jsonResponse(['success' => false, 'error' => 'Affiliate URL must be a valid URL (include https://).'], 400);
     }
 

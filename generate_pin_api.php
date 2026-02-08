@@ -272,10 +272,8 @@ try {
 
     // Deskripsi boleh kosong (akan pakai nama produk sebagai konteks AI)
 
-    if ($affiliateLink === '') {
-        jsonResponse(['success' => false, 'error' => 'Link affiliate wajib diisi.', 'phase' => $__phase], 400);
-    }
-    if (filter_var($affiliateLink, FILTER_VALIDATE_URL) === false) {
+    // Affiliate link is optional. If provided, it must be a valid URL.
+    if ($affiliateLink !== '' && filter_var($affiliateLink, FILTER_VALIDATE_URL) === false) {
         jsonResponse(['success' => false, 'error' => 'Link affiliate harus berupa URL valid (sertakan https://).', 'phase' => $__phase], 400);
     }
 

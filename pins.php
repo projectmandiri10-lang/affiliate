@@ -70,10 +70,22 @@ $pdo = getDbConnection();
 $countStmt = $pdo->query("SELECT COUNT(*) AS c FROM generated_pins WHERE image_path IS NOT NULL AND image_path <> ''");
 $total = (int) ($countStmt ? ($countStmt->fetch()['c'] ?? 0) : 0);
 
-$stmt = $pdo->prepare("SELECT id, product_name, pinterest_title, pinterest_description, keywords, affiliate_link, image_path, created_at FROM generated_pins WHERE image_path IS NOT NULL AND image_path <> '' ORDER BY id DESC LIMIT ? OFFSET ?");
-$stmt->bindValue(1, $perPage, PDO::PARAM_INT);
-$stmt->bindValue(2, $offset, PDO::PARAM_INT);
-$stmt->execute();
+$sqlWithRedirect = "SELECT id, product_name, pinterest_title, pinterest_description, keywords, affiliate_link, redirect_enabled, image_path, created_at FROM generated_pins WHERE image_path IS NOT NULL AND image_path <> '' ORDER BY id DESC LIMIT ? OFFSET ?";
+$sqlFallback = "SELECT id, product_name, pinterest_title, pinterest_description, keywords, affiliate_link, image_path, created_at FROM generated_pins WHERE image_path IS NOT NULL AND image_path <> '' ORDER BY id DESC LIMIT ? OFFSET ?";
+
+try {
+    $stmt = $pdo->prepare($sqlWithRedirect);
+    $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+} catch (Throwable $e) {
+    // Backward compatibility: allow gallery to load even if DB migration has not been applied yet.
+    $stmt = $pdo->prepare($sqlFallback);
+    $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+}
+
 $rows = $stmt->fetchAll();
 
 $base = baseUrl();
@@ -103,7 +115,7 @@ $base = baseUrl();
         <section class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <div class="text-sm font-semibold text-slate-800">Admin Key (Compress)</div>
-                <div class="text-xs text-slate-500">Masukkan key dari `.env` (`COMPRESS_KEY`) untuk mengaktifkan tombol Compress.</div>
+                <div class="text-xs text-slate-500">Masukkan key dari `.env` (`COMPRESS_KEY`) untuk mengaktifkan tombol Compress, Hapus, dan Toggle Redirect.</div>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <input id="compressKeyInput" type="password" placeholder="COMPRESS_KEY" class="w-full sm:w-72 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-200">
@@ -127,6 +139,9 @@ $base = baseUrl();
                         $previewUrl = $base . 'preview.php?id=' . urlencode((string) $id);
                         $editUrl = $base . 'edit_pin.php?id=' . urlencode((string) $id);
 
+                        $redirectEnabled = (int) ($r['redirect_enabled'] ?? 1);
+                        $redirectEnabled = $redirectEnabled ? 1 : 0;
+
                         $title = (string) ($r['pinterest_title'] ?: $r['product_name']);
                         $desc = limitWords((string) ($r['pinterest_description'] ?? ''), 15);
                         $keywords = json_decode((string) ($r['keywords'] ?? ''), true);
@@ -148,6 +163,22 @@ $base = baseUrl();
                         </a>
                         <div class="p-2 space-y-2">
                             <div class="text-xs font-semibold text-slate-700 truncate" title="<?= h($title) ?>"><?= h($title) ?></div>
+
+                            <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-1">
+                                <div class="text-[10px] font-semibold text-slate-600">Redirect</div>
+                                <label class="inline-flex items-center cursor-pointer select-none" title="Aktifkan/nonaktifkan redirect otomatis ke link affiliate pada halaman preview">
+                                    <input
+                                        type="checkbox"
+                                        class="sr-only peer redirectToggle"
+                                        data-pin-id="<?= (int) $id ?>"
+                                        data-redirect-enabled="<?= (int) $redirectEnabled ?>"
+                                        <?= $redirectEnabled ? 'checked' : '' ?>
+                                        disabled
+                                    >
+                                    <div class="relative w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border after:border-slate-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                                </label>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-2">
                                 <a href="<?= h($editUrl) ?>" class="text-center px-2 py-1 rounded-lg bg-slate-800 text-white text-xs font-semibold hover:bg-slate-900 transition">Edit</a>
                                 <a href="<?= h($previewUrl) ?>" target="_blank" rel="noopener" class="text-center px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition">Preview</a>
@@ -212,6 +243,10 @@ $base = baseUrl();
             var delButtons = document.querySelectorAll('.deleteBtn');
             for (var j = 0; j < delButtons.length; j++) {
                 delButtons[j].disabled = !key;
+            }
+            var toggles = document.querySelectorAll('.redirectToggle');
+            for (var k = 0; k < toggles.length; k++) {
+                toggles[k].disabled = !key;
             }
             setStatus(key ? 'Unlocked' : 'Locked', !!key);
         }
@@ -351,6 +386,54 @@ $base = baseUrl();
             }
         }
 
+        async function setRedirectEnabled(pinId, enabled, prevEnabled, inputEl, statusEl) {
+            var key = getKey();
+            if (!key) {
+                if (statusEl) statusEl.textContent = 'Unlock dulu.';
+                if (inputEl) inputEl.checked = (prevEnabled === 1);
+                return;
+            }
+
+            if (inputEl) inputEl.disabled = true;
+            if (statusEl) statusEl.textContent = 'Saving...';
+
+            try {
+                var res = await fetch('set_redirect_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Compress-Key': key
+                    },
+                    body: JSON.stringify({ pin_id: pinId, redirect_enabled: enabled })
+                });
+
+                var txt = await res.text();
+                var data = null;
+                try { data = JSON.parse(txt); } catch (e) {}
+
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Non-JSON response (HTTP ' + res.status + ')');
+                }
+                if (!data.success) {
+                    throw new Error(data.error || 'Update failed');
+                }
+
+                var finalEnabled = (String(data.redirect_enabled) === '1') ? 1 : 0;
+                if (inputEl) {
+                    inputEl.checked = (finalEnabled === 1);
+                    inputEl.setAttribute('data-redirect-enabled', String(finalEnabled));
+                }
+                if (statusEl) statusEl.textContent = finalEnabled ? 'Redirect aktif' : 'Redirect nonaktif';
+            } catch (err) {
+                if (inputEl) {
+                    inputEl.checked = (prevEnabled === 1);
+                }
+                if (statusEl) statusEl.textContent = (err && err.message) ? err.message : 'Error';
+            } finally {
+                refreshButtons();
+            }
+        }
+
         function formatBytes(b) {
             b = (typeof b === 'number') ? b : 0;
             if (b <= 0) return '0B';
@@ -382,6 +465,24 @@ $base = baseUrl();
                 if (delId > 0) deletePin(delId, t, statusEl2);
                 return;
             }
+        });
+
+        document.addEventListener('change', function(e){
+            var t = e.target;
+            if (!t || !t.classList) return;
+            if (!t.classList.contains('redirectToggle')) return;
+
+            var pinId = parseInt(t.getAttribute('data-pin-id') || '0', 10);
+            if (pinId <= 0) return;
+
+            var enabled = t.checked ? 1 : 0;
+            var prevEnabled = parseInt(t.getAttribute('data-redirect-enabled') || '1', 10);
+            if (prevEnabled !== 0 && prevEnabled !== 1) prevEnabled = 1;
+
+            var card = t.closest ? t.closest('article') : null;
+            var statusEl = card ? card.querySelector('.compressStatus') : null;
+
+            setRedirectEnabled(pinId, enabled, prevEnabled, t, statusEl);
         });
 
         refreshButtons();

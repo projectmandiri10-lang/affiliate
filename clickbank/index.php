@@ -54,9 +54,9 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-2">ClickBank HopLink (Required)</label>
-                        <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://example.hop.clickbank.net/?tid=..." required>
-                        <p class="text-xs text-slate-500 mt-1">This link is shown on the preview page and used for the redirect.</p>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Affiliate HopLink (Optional)</label>
+                        <input type="url" id="affiliateLink" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="https://example.hop.clickbank.net/?tid=...">
+                        <p class="text-xs text-slate-500 mt-1">If provided, it will be used for redirect on the preview page (when Redirect is ON). If empty, preview will not redirect.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Upload Offer Image (Required)</label>
