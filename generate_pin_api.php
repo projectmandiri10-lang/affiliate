@@ -194,11 +194,18 @@ $description = $_POST['description'] ?? '';
 $category = $_POST['category'] ?? 'General';
 $affiliateLink = $_POST['affiliate_link'] ?? '';
 $originalProductUrl = $_POST['original_product_url'] ?? null;
+$contentLanguage = $_POST['content_language'] ?? 'id';
 
 $productName = trim((string) $productName);
 $description = trim((string) $description);
 $category = trim((string) $category);
 $affiliateLink = trim((string) $affiliateLink);
+$contentLanguage = strtolower(trim((string) $contentLanguage));
+if ($contentLanguage === 'en' || strpos($contentLanguage, 'en') === 0) {
+    $contentLanguage = 'en';
+} else {
+    $contentLanguage = 'id';
+}
 if ($originalProductUrl !== null) {
     $originalProductUrl = trim((string) $originalProductUrl);
     if ($originalProductUrl === '') {
@@ -291,9 +298,17 @@ try {
 
     // Check DB cache
     $__phase = 'db_cache_lookup';
-    $stmt = $pdo->prepare("SELECT * FROM generated_pins WHERE product_name = ? LIMIT 1");
-    $stmt->execute([$productName]);
-    $existingPin = $stmt->fetch();
+    $existingPin = null;
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM generated_pins WHERE product_name = ? AND content_language = ? LIMIT 1");
+        $stmt->execute([$productName, $contentLanguage]);
+        $existingPin = $stmt->fetch();
+    } catch (Throwable $e) {
+        // Backward compatibility: allow cache lookup even if content_language column does not exist yet.
+        $stmt = $pdo->prepare("SELECT * FROM generated_pins WHERE product_name = ? LIMIT 1");
+        $stmt->execute([$productName]);
+        $existingPin = $stmt->fetch();
+    }
     
     $result = null;
 
@@ -311,11 +326,12 @@ try {
         // Generate new content
         // If description is still empty, use product name as base
         $__phase = 'gemini_generate';
-        $descForAI = !empty($description) ? $description : "Produk: " . $productName;
+        $prefix = ($contentLanguage === 'en') ? 'Product: ' : 'Produk: ';
+        $descForAI = !empty($description) ? $description : ($prefix . $productName);
         
         $model = (defined('GEMINI_MODEL') && GEMINI_MODEL) ? GEMINI_MODEL : 'gemini-2.5-flash';
         $generator = new PinterestGenerator(GEMINI_API_KEY, $model);
-        $result = $generator->generate($productName, $descForAI, $category);
+        $result = $generator->generate($productName, $descForAI, $category, $contentLanguage);
         if (isset($result['pinterest_description'])) {
             $result['pinterest_description'] = limitWords($result['pinterest_description'], 15);
         }
@@ -323,21 +339,42 @@ try {
 
     // 4. Save to Database
     $__phase = 'db_insert';
-    $insertSql = "INSERT INTO generated_pins (product_name, product_description, category, pinterest_title, pinterest_description, keywords, recommended_boards, strategy, affiliate_link, original_product_url, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmtInsert = $pdo->prepare($insertSql);
-    $stmtInsert->execute([
-        $productName,
-        $description,
-        $category,
-        $result['pinterest_title'],
-        $result['pinterest_description'],
-        json_encode($result['keywords']),
-        json_encode($result['recommended_boards']),
-        $result['content_strategy'],
-        $affiliateLink,
-        $originalProductUrl,
-        $processedImagePath
-    ]);
+    $insertSqlNew = "INSERT INTO generated_pins (product_name, product_description, category, pinterest_title, pinterest_description, keywords, recommended_boards, strategy, content_language, affiliate_link, original_product_url, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $insertSqlOld = "INSERT INTO generated_pins (product_name, product_description, category, pinterest_title, pinterest_description, keywords, recommended_boards, strategy, affiliate_link, original_product_url, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    try {
+        $stmtInsert = $pdo->prepare($insertSqlNew);
+        $stmtInsert->execute([
+            $productName,
+            $description,
+            $category,
+            $result['pinterest_title'],
+            $result['pinterest_description'],
+            json_encode($result['keywords']),
+            json_encode($result['recommended_boards']),
+            $result['content_strategy'],
+            $contentLanguage,
+            $affiliateLink,
+            $originalProductUrl,
+            $processedImagePath
+        ]);
+    } catch (Throwable $e) {
+        // Backward compatibility: allow insert even if content_language column does not exist yet.
+        $stmtInsert = $pdo->prepare($insertSqlOld);
+        $stmtInsert->execute([
+            $productName,
+            $description,
+            $category,
+            $result['pinterest_title'],
+            $result['pinterest_description'],
+            json_encode($result['keywords']),
+            json_encode($result['recommended_boards']),
+            $result['content_strategy'],
+            $affiliateLink,
+            $originalProductUrl,
+            $processedImagePath
+        ]);
+    }
 
     $insertedId = (int) $pdo->lastInsertId();
 
@@ -372,6 +409,7 @@ try {
         'success' => true,
         'source' => $existingPin ? 'database_text_cache' : 'new_generation',
         'data' => $result,
+        'content_language' => $contentLanguage,
         'image_url' => $absoluteImageUrl,
         'image_path' => $processedImagePath,
         'affiliate_link' => $affiliateLink,

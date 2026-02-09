@@ -24,14 +24,23 @@ class PinterestGenerator {
      * @param string $category Kategori produk
      * @return array Hasil generate (Judul, Deskripsi, Keywords, Board)
      */
-    public function generate($productName, $productDesc, $category) {
+    public function generate($productName, $productDesc, $category, $language = 'id') {
         $productName = $this->sanitizeInputText($productName, 200);
         $category = $this->sanitizeInputText($category, 100);
         $productDesc = $this->sanitizeInputText($productDesc, 3000);
 
-        $prompt = $this->buildPrompt($productName, $productDesc, $category);
+        $language = $this->normalizeLanguage($language);
+        $prompt = $this->buildPrompt($productName, $productDesc, $category, $language);
         $response = $this->callApi($prompt);
         return $this->parseResponse($response);
+    }
+
+    private function normalizeLanguage($language) {
+        $v = strtolower(trim((string) $language));
+        if ($v === 'en' || $v === 'english') {
+            return 'en';
+        }
+        return 'id';
     }
 
     private function sanitizeInputText($value, $maxLen) {
@@ -65,7 +74,53 @@ class PinterestGenerator {
         return $text;
     }
 
-    private function buildPrompt($name, $desc, $category) {
+    private function buildPrompt($name, $desc, $category, $language) {
+        if ($language === 'en') {
+            return <<<PROMPT
+You are a Pinterest SEO specialist. Your task is to generate Pinterest-ready copy for the product below so it is engaging, search-friendly, and compliant (not spammy).
+
+PRODUCT INFORMATION:
+Product Name: {$name}
+Description: {$desc}
+Category: {$category}
+
+RETURN ONLY VALID JSON using this exact structure:
+{
+  "pinterest_title": "String (40-70 characters)",
+  "pinterest_description": "String (7-15 words, no hashtags)",
+  "keywords": ["keyword1", "keyword2", "...", "keyword8"],
+  "recommended_boards": ["Board 1", "Board 2", "Board 3"],
+  "content_strategy": "Brief explanation of the hook angle used"
+}
+
+STRICT RULES:
+1) TITLE
+   - MUST be 40-70 characters.
+   - MUST include the primary keyword naturally.
+   - Must be honest and informative (no misleading clickbait).
+   - English only.
+
+2) DESCRIPTION
+   - MUST be 7-15 words (words, not characters).
+   - Must be exactly one short sentence, natural and informative.
+   - No hashtags (#) and no line breaks.
+   - English only.
+
+3) KEYWORDS
+   - 5-8 relevant English keywords.
+   - Mix short-tail and long-tail queries.
+
+4) BOARDS
+   - 2-3 board names that are specific to the niche.
+
+5) OUTPUT FORMAT (MANDATORY)
+   - Output JSON only (no explanations, no Markdown, no ``` fences).
+   - Do not use raw newlines/control characters inside JSON strings.
+     If you need paragraph breaks, use escaped \\n\\n inside a string.
+PROMPT;
+        }
+
+        // Default: Indonesian
         return <<<PROMPT
 Anda adalah spesialis Pinterest SEO Indonesia. Tugas anda adalah membuat konten Pinterest untuk produk berikut agar viral di Indonesia, SEO friendly, dan aman (tidak spam).
 

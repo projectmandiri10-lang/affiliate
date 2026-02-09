@@ -18,7 +18,7 @@
         <!-- Header -->
         <div class="text-center mb-10">
             <h1 class="text-3xl font-bold text-slate-800 mb-2">Pinterest Pin Generator (ClickBank)</h1>
-            <p class="text-slate-500">Generate Pinterest-ready SEO copy and a watermarked image in seconds.</p>
+            <p class="text-slate-500">Generate Pinterest-ready SEO copy and an optimized image in seconds.</p>
             <div class="mt-3 flex justify-center gap-2">
                 <a href="pins.php" class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition text-sm font-semibold">Uploads Gallery</a>
             </div>
@@ -61,12 +61,12 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Upload Offer Image (Required)</label>
                         <input type="file" id="productImage" accept="image/*" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white" required>
-                        <p class="text-xs text-slate-500 mt-1">Formats: JPG, PNG, WebP (max 10MB). A “PROMO” watermark is added automatically.</p>
+                        <p class="text-xs text-slate-500 mt-1">Formats: JPG, PNG, WebP (max 10MB).</p>
                     </div>
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 rounded-lg transition shadow-md flex justify-center items-center gap-2">
-                    <span>Generate Pinterest Copy & Watermark</span>
+                    <span>Generate Pinterest Copy</span>
                 </button>
             </form>
         </div>
@@ -88,7 +88,7 @@
             <!-- Image Result -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 items-center">
                 <div class="w-full md:w-1/2">
-                    <h3 class="font-semibold text-slate-700 mb-3">Watermarked Image</h3>
+                    <h3 class="font-semibold text-slate-700 mb-3">Generated Image</h3>
                     <div class="w-full rounded-lg overflow-hidden border border-slate-200">
                         <img id="resultImage" src="" alt="Generated Pin" class="w-full h-auto object-cover">
                     </div>

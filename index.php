@@ -48,6 +48,15 @@
                 </div>
 
                 <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Bahasa Konten</label>
+                    <select id="contentLanguage" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition">
+                        <option value="id" selected>Indonesia</option>
+                        <option value="en">English</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">AI akan generate judul, deskripsi, keyword, dan hashtag sesuai bahasa ini.</p>
+                </div>
+
+                <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">Deskripsi Produk (Opsional)</label>
                     <textarea id="description" rows="5" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="(Opsional) Paste deskripsi produk di sini..." ></textarea>
                 </div>
@@ -61,12 +70,12 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Upload Gambar Produk (Wajib)</label>
                         <input type="file" id="productImage" accept="image/*" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white" required>
-                        <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG, WebP (maks 10MB). Watermark PROMO akan otomatis ditambahkan.</p>
+                        <p class="text-xs text-slate-500 mt-1">Format: JPG, PNG, WebP (maks 10MB).</p>
                     </div>
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 rounded-lg transition shadow-md flex justify-center items-center gap-2">
-                    <span>✨ Generate Konten Pinterest & Watermark</span>
+                    <span>✨ Generate Konten Pinterest</span>
                 </button>
             </form>
         </div>
@@ -88,7 +97,7 @@
             <!-- Image Result -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 items-center">
                 <div class="w-full md:w-1/2">
-                    <h3 class="font-semibold text-slate-700 mb-3">🖼️ Hasil Gambar (Watermarked)</h3>
+                    <h3 class="font-semibold text-slate-700 mb-3">🖼️ Hasil Gambar</h3>
                     <div class="w-full rounded-lg overflow-hidden border border-slate-200">
                         <img id="resultImage" src="" alt="Generated Pin" class="w-full h-auto object-cover">
                     </div>
@@ -198,6 +207,7 @@
             formData.append('category', document.getElementById('category').value);
             formData.append('description', document.getElementById('description').value);
             formData.append('affiliate_link', document.getElementById('affiliateLink').value);
+            formData.append('content_language', document.getElementById('contentLanguage').value);
             
             const imageFile = document.getElementById('productImage').files[0];
             if (imageFile) {

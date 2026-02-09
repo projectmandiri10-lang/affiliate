@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS generated_pins (
     keywords TEXT, -- Stored as JSON or comma separated
     recommended_boards TEXT, -- Stored as JSON or comma separated
     strategy TEXT,
+    content_language VARCHAR(5) NOT NULL DEFAULT 'id',
     affiliate_link TEXT,
     redirect_enabled TINYINT(1) NOT NULL DEFAULT 1,
     original_product_url TEXT,
