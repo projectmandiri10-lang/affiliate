@@ -114,11 +114,11 @@ $base = baseUrl();
 
         <section class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <div class="text-sm font-semibold text-slate-800">Admin Key (Compress)</div>
-                <div class="text-xs text-slate-500">Masukkan key dari `.env` (`COMPRESS_KEY`) untuk mengaktifkan tombol Compress, Hapus, dan Toggle Redirect.</div>
+                <div class="text-sm font-semibold text-slate-800">Admin Password</div>
+                <div class="text-xs text-slate-500">Masukkan password dari `.env` (`ADMIN_PASSWORD`). Jika belum diset, sistem akan fallback ke `COMPRESS_KEY`.</div>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <input id="compressKeyInput" type="password" placeholder="COMPRESS_KEY" class="w-full sm:w-72 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-200">
+                <input id="compressKeyInput" type="password" placeholder="ADMIN_PASSWORD" class="w-full sm:w-72 px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-200">
                 <div class="flex gap-2">
                     <button id="unlockCompressBtn" type="button" class="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-semibold hover:bg-slate-900 transition">Unlock</button>
                     <button id="lockCompressBtn" type="button" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition">Lock</button>

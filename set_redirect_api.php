@@ -81,9 +81,11 @@ if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST')
 
 require_once __DIR__ . '/config.php';
 
-$expectedKey = env('COMPRESS_KEY', '');
-if ($expectedKey === '') {
-    jsonResponse(['success' => false, 'error' => 'Server misconfiguration: set COMPRESS_KEY in .env'], 500);
+// Auth: prefer ADMIN_PASSWORD, fallback to COMPRESS_KEY for backwards compatibility.
+$expectedAdmin = env('ADMIN_PASSWORD', '');
+$expectedLegacy = env('COMPRESS_KEY', '');
+if ($expectedAdmin === '' && $expectedLegacy === '') {
+    jsonResponse(['success' => false, 'error' => 'Server misconfiguration: set ADMIN_PASSWORD (or COMPRESS_KEY) in .env'], 500);
 }
 
 $providedKey = '';
@@ -91,7 +93,14 @@ if (isset($_SERVER['HTTP_X_COMPRESS_KEY'])) {
     $providedKey = (string) $_SERVER['HTTP_X_COMPRESS_KEY'];
 }
 
-if ($providedKey === '' || !(function_exists('hash_equals') ? hash_equals($expectedKey, $providedKey) : ($expectedKey === $providedKey))) {
+$ok = false;
+if ($expectedAdmin !== '') {
+    $ok = ($providedKey !== '' && (function_exists('hash_equals') ? hash_equals($expectedAdmin, $providedKey) : ($expectedAdmin === $providedKey)));
+} elseif ($expectedLegacy !== '') {
+    $ok = ($providedKey !== '' && (function_exists('hash_equals') ? hash_equals($expectedLegacy, $providedKey) : ($expectedLegacy === $providedKey)));
+}
+
+if (!$ok) {
     jsonResponse(['success' => false, 'error' => 'Forbidden'], 403);
 }
 
