@@ -207,16 +207,16 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
                         <a data-pin-do="buttonPin" href="<?= h($pinterestCreateUrl) ?>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
                             Create Pin on Pinterest
                         </a>
-                        <button id="copyCaptionBtn" type="button" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold transition">
-                            Copy Caption
-                        </button>
+                        <?php if ($redirectEnabled && $affiliate !== ''): ?>
+                            <a id="visitBtn" href="<?= h($affiliate) ?>" rel="nofollow sponsored" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition">
+                                Visit
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
             <p class="mt-3 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"><?= h($descWithHashtags) ?></p>
         </header>
-
-        <textarea id="captionText" class="sr-only" aria-hidden="true"><?= h($captionFull) ?></textarea>
 
         <?php if ($imageUrl !== ''): ?>
             <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -262,53 +262,7 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
         var redirectEnabled = <?= (int) $redirectEnabled ?>;
         var btn = document.getElementById('affiliateBtn');
         var dlBtn = document.getElementById('downloadBtn');
-        var copyBtn = document.getElementById('copyCaptionBtn');
-        var captionEl = document.getElementById('captionText');
         if (!el) return;
-
-        var copyCaption = function () {
-            if (!captionEl) return;
-
-            var text = captionEl.value || captionEl.textContent || '';
-            var ok = false;
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
-                    ok = true;
-                    if (copyBtn) {
-                        var prev = copyBtn.textContent;
-                        copyBtn.textContent = 'Copied!';
-                        setTimeout(function () {
-                            copyBtn.textContent = prev;
-                        }, 1500);
-                    }
-                }).catch(function () {
-                    // fall back below
-                });
-                return;
-            }
-
-            // Fallback for older browsers
-            try {
-                captionEl.focus();
-                captionEl.select();
-                ok = document.execCommand('copy');
-            } catch (e) {
-                ok = false;
-            }
-
-            if (ok && copyBtn) {
-                var prev2 = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                setTimeout(function () {
-                    copyBtn.textContent = prev2;
-                }, 1500);
-            }
-        };
-
-        if (copyBtn) {
-            copyBtn.addEventListener('click', copyCaption);
-        }
 
         var tick = function () {
             remaining -= 1;

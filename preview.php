@@ -220,16 +220,28 @@ $pinterestCreateUrl = 'https://www.pinterest.com/pin/create/button/?' . http_bui
                         <a data-pin-do="buttonPin" href="<?= h($pinterestCreateUrl) ?>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">
                             Pin ke Pinterest
                         </a>
-                        <button id="copyCaptionBtn" type="button" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold transition">
-                            Copy Caption
-                        </button>
+                        <?php if ($redirectEnabled && $affiliate !== ''): ?>
+                            <a id="visitBtn" href="<?= h($affiliate) ?>" rel="nofollow sponsored" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition">
+                                Kunjungi
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
             <p class="mt-3 text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"><?= h($descWithHashtags) ?></p>
         </header>
 
-        <textarea id="captionText" class="sr-only" aria-hidden="true"><?= h($captionFull) ?></textarea>
+        <?php if ($redirectEnabled): ?>
+            <section class="bg-white rounded-xl border border-slate-200 p-5">
+                <div class="flex items-center justify-between gap-3">
+                    <h2 class="text-sm font-semibold text-slate-700">Caption</h2>
+                    <button id="copyCaptionBtn" type="button" class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold transition">
+                        Copy Caption
+                    </button>
+                </div>
+                <textarea id="captionText" class="sr-only" aria-hidden="true"><?= h($captionFull) ?></textarea>
+            </section>
+        <?php endif; ?>
 
         <?php if ($imageUrl !== ''): ?>
             <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
